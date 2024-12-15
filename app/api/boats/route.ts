@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const isAdmin = searchParams.get('admin') === 'true';
@@ -21,6 +21,10 @@ export async function GET(request: Request) {
       }
 
       const boats = await prisma.boat.findMany({
+        include: {
+          amenities: true,
+          media: true,
+        },
         orderBy: {
           createdAt: 'desc',
         },
@@ -33,6 +37,10 @@ export async function GET(request: Request) {
     const boats = await prisma.boat.findMany({
       where: {
         available: true,
+      },
+      include: {
+        amenities: true,
+        media: true,
       },
       orderBy: {
         rating: 'desc',
@@ -49,7 +57,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
@@ -66,7 +74,7 @@ export async function POST(request: Request) {
       imageUrl: "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
       capacity: 8,
       location: "Marina da Glória, Rio de Janeiro",
-      pricePerDay: 1500,
+      price: 1500,
       available: true,
       length: 12.5,
       year: 2020,
@@ -100,7 +108,7 @@ export async function POST(request: Request) {
           imageUrl: exampleBoat.imageUrl,
           capacity: exampleBoat.capacity,
           location: exampleBoat.location,
-          pricePerDay: exampleBoat.pricePerDay,
+          price: exampleBoat.price,
           available: exampleBoat.available,
           length: exampleBoat.length,
           year: exampleBoat.year,

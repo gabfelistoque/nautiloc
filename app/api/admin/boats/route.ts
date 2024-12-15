@@ -18,6 +18,10 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
+      include: {
+        amenities: true,
+        media: true,
+      },
     });
 
     return NextResponse.json(boats);
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
     const data = await request.json();
 
     // Validação básica dos campos obrigatórios
-    const requiredFields = ['name', 'description', 'imageUrl', 'location', 'pricePerDay', 'capacity'];
+    const requiredFields = ['name', 'description', 'imageUrl', 'location', 'price', 'capacity'];
     const missingFields = requiredFields.filter(field => !data[field]);
     
     if (missingFields.length > 0) {
@@ -53,9 +57,9 @@ export async function POST(request: Request) {
     }
 
     // Validação dos tipos de dados
-    if (isNaN(parseFloat(data.pricePerDay)) || parseFloat(data.pricePerDay) <= 0) {
+    if (isNaN(parseFloat(data.price)) || parseFloat(data.price) <= 0) {
       return NextResponse.json(
-        { error: 'Preço por dia deve ser um número positivo' },
+        { error: 'Preço deve ser um número positivo' },
         { status: 400 }
       );
     }
@@ -103,7 +107,7 @@ export async function POST(request: Request) {
           imageUrl: data.imageUrl,
           capacity: parseInt(data.capacity),
           location: data.location,
-          pricePerDay: parseFloat(data.pricePerDay),
+          price: parseFloat(data.price),
           rating: 0,
           available: true,
           length: data.length ? parseFloat(data.length) : 0,
