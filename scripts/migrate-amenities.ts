@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const sqlite3 = require('sqlite3').verbose();
+import { PrismaClient } from '@prisma/client';
+import sqlite3 from 'sqlite3';
 
 const prisma = new PrismaClient();
 const db = new sqlite3.Database('./prisma/dev.db');

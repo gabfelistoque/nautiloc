@@ -1,17 +1,19 @@
 {
-  "name": "nautiloc",
+  "name": "nautiloc_app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "seed-amenities": "ts-node --esm scripts/seed-amenities.ts",
     "migrate-amenities": "ts-node --esm scripts/migrate-amenities.ts",
     "seed": "ts-node --esm prisma/seed.ts",
     "add-example-boat": "ts-node --esm scripts/add-example-boat.ts",
-    "create-admin": "ts-node --esm scripts/create-admin.ts"
+    "create-admin": "ts-node --esm scripts/create-admin.ts",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
