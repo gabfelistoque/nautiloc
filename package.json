@@ -10,7 +10,8 @@
     "seed-amenities": "ts-node --esm scripts/seed-amenities.ts",
     "migrate-amenities": "ts-node --esm scripts/migrate-amenities.ts",
     "seed": "ts-node --esm prisma/seed.ts",
-    "add-example-boat": "ts-node --esm scripts/add-example-boat.ts"
+    "add-example-boat": "ts-node --esm scripts/add-example-boat.ts",
+    "create-admin": "ts-node --esm scripts/create-admin.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
