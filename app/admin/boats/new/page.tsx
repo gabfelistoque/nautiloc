@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiWifi, FiAnchor, FiCoffee, FiMusic, FiSun, FiTv, FiWind } from 'react-icons/fi';
-import { GiCooler, GiGrill } from 'react-icons/gi';
+import { GiCooler, GiBarbecue } from 'react-icons/gi';
 
 interface BoatFormData {
   name: string;
@@ -54,6 +54,7 @@ const commonAmenities = [
   { name: 'TV', icon: 'tv' },
   { name: 'Cooler', icon: 'cooler' },
   { name: 'Área de Sol', icon: 'sun' },
+  { name: 'Churrasqueira', icon: 'barbecue' },
 ];
 
 // Mapa de ícones para componentes
@@ -66,6 +67,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   tv: FiTv,
   cooler: GiCooler,
   sun: FiSun,
+  barbecue: GiBarbecue,
 };
 
 export default function NewBoatPage() {

@@ -5,11 +5,18 @@ import { useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 import MediaUpload from '@/components/MediaUpload';
 import { 
-  WifiIcon, 
-  MusicalNoteIcon, 
-  TvIcon, 
-  AcademicCapIcon 
-} from '@heroicons/react/24/outline';
+  FiWifi, 
+  FiAnchor, 
+  FiCoffee, 
+  FiMusic, 
+  FiSun, 
+  FiTv, 
+  FiWind 
+} from 'react-icons/fi';
+import { 
+  GiCooler, 
+  GiBarbecue 
+} from 'react-icons/gi';
 
 interface Boat {
   id: string;
@@ -28,6 +35,30 @@ export default function EditBoat({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const features = [
+    { name: 'Wi-Fi', icon: 'wifi' },
+    { name: 'Âncora', icon: 'anchor' },
+    { name: 'Café', icon: 'coffee' },
+    { name: 'Som', icon: 'music' },
+    { name: 'Ar Condicionado', icon: 'wind' },
+    { name: 'TV', icon: 'tv' },
+    { name: 'Cooler', icon: 'cooler' },
+    { name: 'Área de Sol', icon: 'sun' },
+    { name: 'Churrasqueira', icon: 'barbecue' },
+  ];
+
+  const iconMap = {
+    wifi: FiWifi,
+    anchor: FiAnchor,
+    coffee: FiCoffee,
+    music: FiMusic,
+    wind: FiWind,
+    tv: FiTv,
+    cooler: GiCooler,
+    sun: FiSun,
+    barbecue: GiBarbecue,
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -191,18 +222,18 @@ export default function EditBoat({ params }: { params: { id: string } }) {
                       Características
                     </label>
                     <div className="mt-4 space-y-4">
-                      {['WiFi', 'Som', 'TV', 'Instrutor'].map((feature, index) => (
-                        <div key={feature} className="flex items-start">
+                      {features.map((feature, index) => (
+                        <div key={feature.name} className="flex items-start">
                           <div className="flex items-center h-5">
                             <input
                               id={`feature-${index}`}
                               name={`feature-${index}`}
                               type="checkbox"
-                              checked={boat.features.includes(feature)}
+                              checked={boat.features.includes(feature.name)}
                               onChange={(e) => {
                                 const newFeatures = e.target.checked
-                                  ? [...boat.features, feature]
-                                  : boat.features.filter(f => f !== feature);
+                                  ? [...boat.features, feature.name]
+                                  : boat.features.filter(f => f !== feature.name);
                                 setBoat({ ...boat, features: newFeatures });
                               }}
                               className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
@@ -210,8 +241,11 @@ export default function EditBoat({ params }: { params: { id: string } }) {
                           </div>
                           <div className="ml-3 text-sm">
                             <label htmlFor={`feature-${index}`} className="font-medium text-gray-700">
-                              {feature}
+                              {feature.name}
                             </label>
+                            <span className="ml-2">
+                              <feature.icon />
+                            </span>
                           </div>
                         </div>
                       ))}
