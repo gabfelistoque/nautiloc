@@ -1,91 +1,65 @@
 import { PrismaClient } from '@prisma/client';
-import sqlite3 from 'sqlite3';
 
 const prisma = new PrismaClient();
-const db = new sqlite3.Database('./prisma/dev.db');
-
-interface OldBoatAmenity {
-  id: string;
-  name: string;
-  icon: string;
-  boatId: string;
-}
-
-interface AmenityGroup {
-  name: string;
-  iconName: string;
-  boatIds: string[];
-}
-
-function getOldAmenities(): Promise<OldBoatAmenity[]> {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM BoatAmenity', (err: Error | null, rows: OldBoatAmenity[]) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(rows);
-    });
-  });
-}
 
 async function main() {
-  console.log('Iniciando migração de amenidades...');
-
   try {
-    // 1. Busca todas as amenidades existentes
-    const existingAmenities = await getOldAmenities();
-    console.log(`Encontradas ${existingAmenities.length} amenidades existentes`);
+    // Buscar todas as amenidades antigas
+    const oldAmenities = await prisma.$queryRaw`
+      SELECT * FROM "boatAmenity"
+    `;
 
-    // 2. Agrupa amenidades por iconName para evitar duplicatas
-    const amenityGroups = existingAmenities.reduce((acc: Record<string, AmenityGroup>, curr: OldBoatAmenity) => {
-      const iconName = curr.icon;
-      if (!acc[iconName]) {
-        acc[iconName] = {
-          name: curr.name,
-          iconName: curr.icon,
-          boatIds: [curr.boatId]
-        };
-      } else {
-        acc[iconName].boatIds.push(curr.boatId);
-      }
-      return acc;
-    }, {});
-
-    // 3. Cria as novas amenidades e suas relações
-    for (const [iconName, data] of Object.entries<AmenityGroup>(amenityGroups)) {
-      console.log(`Migrando amenidade: ${data.name} (${iconName})`);
-
-      // Cria a amenidade
-      const amenity = await prisma.amenity.create({
-        data: {
-          name: data.name,
-          iconName: data.iconName,
+    // Criar novas amenidades
+    for (const oldAmenity of oldAmenities as any[]) {
+      await prisma.amenity.upsert({
+        where: {
+          iconName: oldAmenity.icon
         },
+        create: {
+          name: oldAmenity.name,
+          iconName: oldAmenity.icon,
+        },
+        update: {
+          name: oldAmenity.name,
+        }
+      });
+    }
+
+    // Buscar todas as relações antigas
+    const oldRelations = await prisma.$queryRaw`
+      SELECT DISTINCT "boatId", "icon" 
+      FROM "boatAmenity"
+    `;
+
+    // Criar novas relações
+    for (const relation of oldRelations as any[]) {
+      const amenity = await prisma.amenity.findUnique({
+        where: {
+          iconName: relation.icon
+        }
       });
 
-      // Cria as relações com os barcos
-      for (const boatId of data.boatIds) {
+      if (amenity) {
         await prisma.boatAmenityRelation.create({
           data: {
-            boatId,
+            boatId: relation.boatId,
             amenityId: amenity.id,
-          },
+          }
         });
       }
     }
 
-    console.log('Migração concluída!');
+    console.log('Migração concluída com sucesso!');
+  } catch (error) {
+    console.error('Erro durante a migração:', error);
+    throw error;
   } finally {
-    db.close();
+    await prisma.$disconnect();
   }
 }
 
 main()
   .catch((e) => {
-    console.error('Erro durante a migração:', e);
+    console.error(e);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });
