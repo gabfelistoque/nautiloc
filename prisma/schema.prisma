@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          String    @default("USER")
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  bookings      Booking[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Boat {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String
+  imageUrl    String
+  capacity    Int
+  location    String
+  pricePerDay Float
+  available   Boolean   @default(true)
+  rating      Float     @default(5.0)
+  length      Float     @default(0.0)    // Comprimento em metros
+  year        Int       @default(2000)   // Ano do barco
+  category    String    @default("Lancha") // Categoria do barco (ex: Lancha, Veleiro, etc)
+  amenities   BoatAmenityRelation[] // Relação com as amenidades
+  bookings    Booking[]
+  media       Media[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Amenity {
+  id          String    @id @default(cuid())
+  name        String    // Nome do item (ex: "Wi-Fi", "Chuveiro", etc)
+  iconName    String    // Nome do ícone (ex: "wifi", "shower", etc)
+  boats       BoatAmenityRelation[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([iconName])
+}
+
+model BoatAmenityRelation {
+  id        String   @id @default(cuid())
+  boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
+  boatId    String
+  amenity   Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  amenityId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([boatId, amenityId])
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  url       String
+  type      String   @default("IMAGE") // "IMAGE" ou "VIDEO"
+  publicId  String?
+  order     Int      @default(0)  // Novo campo para ordenação
+  boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
+  boatId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  startDate   DateTime
+  endDate     DateTime
+  guests      Int
+  status      String   @default("PENDENTE")
+  totalPrice  Float
+  boat        Boat     @relation(fields: [boatId], references: [id])
+  boatId      String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

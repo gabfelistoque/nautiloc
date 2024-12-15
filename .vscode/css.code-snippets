@@ -1,0 +1,8 @@
+{
+  "tailwind": {
+    "scope": "css",
+    "prefix": "@tailwind",
+    "body": ["@tailwind $1"],
+    "description": "Tailwind directive"
+  }
+}

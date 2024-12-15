@@ -1,0 +1,221 @@
+/* Estilos gerais do calendário */
+.rbc-calendar {
+  font-family: 'Inter', sans-serif;
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  font-size: 0.875rem;
+}
+
+/* Cabeçalho do calendário */
+.rbc-toolbar {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-toolbar button {
+  color: #374151;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.rbc-toolbar-label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.rbc-toolbar button.rbc-active:hover {
+  background-color: #1d4ed8;
+}
+
+/* Cabeçalho dos dias da semana */
+.rbc-header {
+  padding: 0.75rem;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  text-transform: capitalize;
+}
+
+/* Células do calendário */
+.rbc-date-cell {
+  padding: 0.5rem;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.rbc-date-cell.rbc-now {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* Eventos */
+.rbc-event {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  border: none;
+  transition: all 0.2s;
+}
+
+.rbc-event:hover {
+  transform: scale(1.02);
+}
+
+.rbc-event-content {
+  font-weight: 500;
+}
+
+/* Hoje */
+.rbc-today {
+  background-color: #f0f9ff;
+}
+
+/* Visualização de Semana e Dia */
+.rbc-time-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-time-header {
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f8fafc;
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid #e5e7eb;
+}
+
+.rbc-time-content {
+  border-top: 1px solid #e5e7eb;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.rbc-time-slot {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.rbc-time-gutter {
+  background-color: #f8fafc;
+}
+
+.rbc-time-header-gutter {
+  background-color: #f8fafc;
+}
+
+.rbc-time-column {
+  background-color: white;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: none;
+}
+
+.rbc-day-slot .rbc-event {
+  border: none;
+  padding: 0.25rem 0.5rem;
+  background-color: #3b82f6;
+  border-radius: 0.25rem;
+  color: white;
+  font-size: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.rbc-day-slot .rbc-event-content {
+  font-weight: 500;
+  white-space: normal;
+  line-height: 1.25;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.rbc-current-time-indicator {
+  background-color: #ef4444;
+  height: 2px;
+}
+
+/* Agenda */
+.rbc-agenda-view table.rbc-agenda-table {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  color: #4b5563;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+}
+
+/* Popup de eventos */
+.rbc-overlay {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  font-size: 0.875rem;
+}
+
+.rbc-overlay-header {
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+/* Mais eventos */
+.rbc-show-more {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #2563eb;
+  background-color: transparent;
+  padding: 2px 4px;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .rbc-toolbar-label {
+    margin: 0.5rem 0;
+  }
+}
