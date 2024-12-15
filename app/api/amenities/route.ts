@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-// GET /api/amenities - Lista todos os amenities disponíveis
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const amenities = await prisma.amenity.findMany({
       orderBy: {
@@ -12,43 +13,107 @@ export async function GET() {
 
     return NextResponse.json(amenities);
   } catch (error) {
-    console.error('Error fetching amenities:', error);
-    return NextResponse.json(
-      { error: 'Erro ao buscar amenidades' },
-      { status: 500 }
-    );
+    console.error("[AMENITIES_GET]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
-// POST /api/amenities/boat - Adiciona amenidades a um barco
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== "ADMIN") {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const body = await request.json();
     const { boatId, amenityIds } = body;
 
     if (!boatId || !amenityIds || !Array.isArray(amenityIds)) {
-      return NextResponse.json(
-        { error: 'ID do barco e lista de IDs de amenidades são obrigatórios' },
-        { status: 400 }
-      );
+      return new NextResponse("Invalid request data", { status: 400 });
     }
 
-    // Remove todas as amenidades existentes do barco
-    await prisma.boatAmenityRelation.deleteMany({
-      where: { boatId }
+    // Verificar se o barco existe
+    const boat = await prisma.boat.findUnique({
+      where: { id: boatId },
+      include: { amenities: true },
     });
 
-    // Adiciona as novas amenidades
-    const relations = await prisma.boatAmenityRelation.createMany({
-      data: amenityIds.map(amenityId => ({
-        boatId,
-        amenityId
-      }))
+    if (!boat) {
+      return new NextResponse("Boat not found", { status: 404 });
+    }
+
+    // Atualizar as amenidades do barco
+    const updatedBoat = await prisma.boat.update({
+      where: { id: boatId },
+      data: {
+        amenities: {
+          set: amenityIds.map(id => ({ id })),
+        },
+      },
+      include: {
+        amenities: true,
+      },
     });
 
-    return NextResponse.json(relations);
+    return NextResponse.json(updatedBoat.amenities);
   } catch (error) {
-    console.error('Error updating boat amenities:', error);
-    return NextResponse.json({ error: 'Erro ao atualizar amenidades do barco' }, { status: 500 });
+    console.error("[AMENITIES_POST]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== "ADMIN") {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await request.json();
+    const { name, iconName } = body;
+
+    if (!name || !iconName) {
+      return new NextResponse("Name and icon name are required", { status: 400 });
+    }
+
+    const amenity = await prisma.amenity.create({
+      data: {
+        name,
+        iconName,
+      },
+    });
+
+    return NextResponse.json(amenity);
+  } catch (error) {
+    console.error("[AMENITY_PUT]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== "ADMIN") {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return new NextResponse("Amenity ID is required", { status: 400 });
+    }
+
+    const amenity = await prisma.amenity.delete({
+      where: { id },
+    });
+
+    return NextResponse.json(amenity);
+  } catch (error) {
+    console.error("[AMENITY_DELETE]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
