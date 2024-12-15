@@ -27,7 +27,7 @@ export async function POST(
       const result = await uploadToCloudinary(file);
       const cloudinaryResult = result as any;
 
-      return prisma.boatMedia.create({
+      return prisma.media.create({
         data: {
           url: cloudinaryResult.secure_url,
           type: mediaType,
@@ -57,7 +57,7 @@ export async function DELETE(
   try {
     const { mediaId } = await request.json();
 
-    const media = await prisma.boatMedia.findFirst({
+    const media = await prisma.media.findFirst({
       where: {
         id: mediaId,
         boatId: params.id,
@@ -76,7 +76,7 @@ export async function DELETE(
       await deleteFromCloudinary(media.publicId);
     }
 
-    await prisma.boatMedia.delete({
+    await prisma.media.delete({
       where: { id: mediaId },
     });
 
