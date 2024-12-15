@@ -48,7 +48,6 @@ model User {
   accounts      Account[]
   sessions      Session[]
   boats         Boat[]
-  bookings      Booking[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -62,19 +61,17 @@ model VerificationToken {
 }
 
 model Boat {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String
   price       Float
   capacity    Int
   length      Float
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
   amenities   Amenity[]
-  media       Media[]
-  bookings    Booking[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Amenity {
@@ -86,41 +83,25 @@ model Amenity {
   updatedAt DateTime @updatedAt
 }
 
-model BoatAmenityRelation {
-  id        String   @id @default(cuid())
-  boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
-  boatId    String
-  amenity   Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
-  amenityId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([boatId, amenityId])
-}
-
 model Media {
   id        String   @id @default(cuid())
   url       String
-  type      String   @default("IMAGE") // "IMAGE" ou "VIDEO"
-  publicId  String?
-  order     Int      @default(0)  // Novo campo para ordenação
-  boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
+  type      String   @default("image")
   boatId    String
+  boat      Boat     @relation(fields: [boatId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Booking {
-  id          String   @id @default(cuid())
-  startDate   DateTime
-  endDate     DateTime
-  guests      Int
-  status      String   @default("PENDENTE")
-  totalPrice  Float
-  boat        Boat     @relation(fields: [boatId], references: [id])
-  boatId      String
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("pending")
+  boatId    String
+  boat      Boat     @relation(fields: [boatId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
