@@ -65,13 +65,21 @@ async function main() {
 
       // Adiciona as amenidades
       if (exampleBoat.amenities.length > 0) {
-        await tx.amenity.createMany({
-          data: exampleBoat.amenities.map((amenity) => ({
-            name: amenity.name,
-            iconName: amenity.icon,
-          })),
-          skipDuplicates: true,
-        });
+        // Primeiro, cria ou encontra as amenidades
+        for (const amenity of exampleBoat.amenities) {
+          await tx.amenity.upsert({
+            where: {
+              iconName: amenity.icon
+            },
+            create: {
+              name: amenity.name,
+              iconName: amenity.icon,
+            },
+            update: {
+              name: amenity.name,
+            }
+          });
+        }
 
         // Agora cria as relações com o barco
         const createdAmenities = await tx.amenity.findMany({
