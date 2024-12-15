@@ -6,7 +6,7 @@ import NextAuth from "next-auth/next";
 
 const prisma = new PrismaClient();
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -15,59 +15,41 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Senha", type: "password" }
       },
       async authorize(credentials) {
-        console.log("Iniciando autorização para:", credentials?.email);
-
         if (!credentials?.email || !credentials?.password) {
-          console.error("Credenciais faltando");
           return null;
         }
 
         try {
-          console.log("Buscando usuário no banco de dados...");
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email,
             }
           });
 
-          console.log("Usuário encontrado:", user ? "Sim" : "Não");
-          console.log("Dados do usuário:", JSON.stringify(user, null, 2));
-
           if (!user || !user.password) {
-            console.error("Usuário não encontrado ou sem senha");
             return null;
           }
-
-          console.log("Verificando senha...");
-          console.log("Senha fornecida:", credentials.password);
-          console.log("Hash armazenado:", user.password);
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           );
 
-          console.log("Senha válida:", isPasswordValid ? "Sim" : "Não");
-
           if (!isPasswordValid) {
-            console.error("Senha inválida para o usuário:", credentials.email);
             return null;
           }
 
-          console.log("Autenticação bem-sucedida para:", credentials.email);
-          
-          // Retorna apenas os dados necessários
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role,
+            role: user.role
           };
         } catch (error) {
-          console.error("Erro durante a autenticação:", error);
+          console.error("Erro na autenticação:", error);
           return null;
         }
-      },
+      }
     }),
   ],
   callbacks: {
@@ -82,18 +64,19 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role;
       }
       return session;
-    },
-  },
-  debug: true,
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 dias
+    }
   },
   pages: {
-    signIn: "/auth/login",
-    error: "/auth/login",
+    signIn: '/login',
+    error: '/login'
   },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60 // 30 dias
+  },
+  secret: process.env.NEXTAUTH_SECRET
 };
 
 const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+
+export { handler as GET, handler as POST, authOptions };

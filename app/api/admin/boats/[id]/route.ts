@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -29,16 +29,15 @@ export async function GET(
 
     return NextResponse.json(boat);
   } catch (error) {
-    console.error('Error fetching boat:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// PATCH /api/admin/boats/[id] - Atualiza um barco
-export async function PATCH(
+// PUT /api/admin/boats/[id] - Atualiza um barco
+export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
@@ -49,40 +48,29 @@ export async function PATCH(
   }
 
   try {
-    const data = await request.json();
+    const body = await request.json();
+    const { name, description, pricePerDay, capacity, length, features, images } = body;
 
-    // Verifica se o barco existe
-    const existingBoat = await prisma.boat.findUnique({
-      where: {
-        id: params.id,
-      },
-    });
-
-    if (!existingBoat) {
-      return NextResponse.json({ error: 'Boat not found' }, { status: 404 });
-    }
-
-    // Atualiza o barco
     const boat = await prisma.boat.update({
       where: {
         id: params.id,
       },
       data: {
-        name: data.name !== undefined ? data.name : undefined,
-        description: data.description !== undefined ? data.description : undefined,
-        imageUrl: data.imageUrl !== undefined ? data.imageUrl : undefined,
-        capacity: data.capacity !== undefined ? parseInt(data.capacity) : undefined,
-        location: data.location !== undefined ? data.location : undefined,
-        pricePerDay: data.pricePerDay !== undefined ? parseFloat(data.pricePerDay) : undefined,
-        available: data.available !== undefined ? data.available : undefined,
+        name,
+        description,
+        pricePerDay,
+        capacity,
+        length,
+        features,
+        images,
+        updatedAt: new Date(),
       },
     });
 
     return NextResponse.json(boat);
   } catch (error) {
-    console.error('Error updating boat:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -100,32 +88,16 @@ export async function DELETE(
   }
 
   try {
-    // Verifica se existem reservas para este barco
-    const bookings = await prisma.booking.findMany({
-      where: {
-        boatId: params.id,
-        status: 'ACTIVE',
-      },
-    });
-
-    if (bookings.length > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete boat with active bookings' },
-        { status: 400 }
-      );
-    }
-
     await prisma.boat.delete({
       where: {
         id: params.id,
       },
     });
 
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json({ message: 'Boat deleted successfully' });
   } catch (error) {
-    console.error('Error deleting boat:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

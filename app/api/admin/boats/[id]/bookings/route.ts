@@ -1,32 +1,42 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
+// GET /api/admin/boats/[id]/bookings - Lista todas as reservas de um barco
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
+  const session = await getServerSession(authOptions);
 
+  if (!session || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
     const bookings = await prisma.booking.findMany({
       where: {
         boatId: params.id,
       },
-      orderBy: {
-        startDate: 'desc',
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
     return NextResponse.json(bookings);
   } catch (error) {
-    console.error('Error fetching boat bookings:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
