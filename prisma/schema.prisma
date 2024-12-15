@@ -48,6 +48,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   boats         Boat[]
+  bookings      Booking[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -70,6 +71,8 @@ model Boat {
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   amenities   Amenity[]
+  media       Media[]
+  bookings    Booking[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
