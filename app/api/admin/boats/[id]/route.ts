@@ -27,8 +27,13 @@ export async function GET(
       return NextResponse.json({ error: 'Boat not found' }, { status: 404 });
     }
 
-    return NextResponse.json(boat);
+    return NextResponse.json({
+      ...boat,
+      features: JSON.parse(boat.features),
+      images: JSON.parse(boat.images),
+    });
   } catch (error) {
+    console.error("[BOAT_GET]", error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -41,15 +46,22 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
-    const body = await request.json();
-    const { name, description, pricePerDay, capacity, length, features, images } = body;
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== "ADMIN") {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { 
+      name, 
+      description, 
+      pricePerDay, 
+      capacity, 
+      length,
+      features,
+      images,
+    } = await request.json();
 
     const boat = await prisma.boat.update({
       where: {
@@ -61,18 +73,16 @@ export async function PUT(
         pricePerDay,
         capacity,
         length,
-        features,
-        images,
+        features: JSON.stringify(features),
+        images: JSON.stringify(images),
         updatedAt: new Date(),
       },
     });
 
     return NextResponse.json(boat);
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error("[BOAT_UPDATE]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
