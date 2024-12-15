@@ -63,7 +63,7 @@ model VerificationToken {
 
 model Boat {
   id          String    @id @default(cuid())
-  name        String
+  name        String    @unique
   description String
   price       Float
   capacity    Int
@@ -91,7 +91,7 @@ model Media {
   url       String
   type      String   @default("image")
   boatId    String
-  boat      Boat     @relation(fields: [boatId], references: [id])
+  boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -102,9 +102,9 @@ model Booking {
   endDate   DateTime
   status    String   @default("pending")
   boatId    String
-  boat      Boat     @relation(fields: [boatId], references: [id])
+  boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

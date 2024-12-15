@@ -14,6 +14,10 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    if (!params.id) {
+      return new NextResponse("Boat id is required", { status: 400 });
+    }
+
     const boat = await prisma.boat.findUnique({
       where: {
         id: params.id,
@@ -47,29 +51,45 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { 
-      name,
-      description,
-      price,
-      capacity,
-      length,
-      amenityIds,
-    } = body;
+    const { name, amenityIds, ...data } = body;
 
-    const boat = await prisma.boat.update({
+    if (!params.id) {
+      return new NextResponse("Boat id is required", { status: 400 });
+    }
+
+    // Verificar se o barco existe
+    const existingBoat = await prisma.boat.findUnique({
+      where: {
+        id: params.id,
+      },
+    });
+
+    if (!existingBoat) {
+      return new NextResponse("Boat not found", { status: 404 });
+    }
+
+    // Se o nome foi alterado, verificar se já existe outro barco com esse nome
+    if (name && name !== existingBoat.name) {
+      const boatWithSameName = await prisma.boat.findUnique({
+        where: { name },
+      });
+
+      if (boatWithSameName) {
+        return new NextResponse("Boat with this name already exists", { status: 400 });
+      }
+    }
+
+    // Atualizar o barco
+    const updatedBoat = await prisma.boat.update({
       where: {
         id: params.id,
       },
       data: {
+        ...data,
         name,
-        description,
-        price,
-        capacity,
-        length,
-        updatedAt: new Date(),
-        amenities: {
-          set: amenityIds ? amenityIds.map((id: string) => ({ id })) : [],
-        },
+        amenities: amenityIds ? {
+          set: amenityIds.map((id: string) => ({ id })),
+        } : undefined,
       },
       include: {
         amenities: true,
@@ -77,7 +97,7 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(boat);
+    return NextResponse.json(updatedBoat);
   } catch (error) {
     console.error("[BOAT_PATCH]", error);
     return new NextResponse("Internal error", { status: 500 });
@@ -95,13 +115,17 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    await prisma.boat.delete({
+    if (!params.id) {
+      return new NextResponse("Boat id is required", { status: 400 });
+    }
+
+    const boat = await prisma.boat.delete({
       where: {
         id: params.id,
       },
     });
 
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json(boat);
   } catch (error) {
     console.error("[BOAT_DELETE]", error);
     return new NextResponse("Internal error", { status: 500 });
