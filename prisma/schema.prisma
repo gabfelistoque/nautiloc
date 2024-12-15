@@ -65,9 +65,15 @@ model Boat {
   id          String    @id @default(cuid())
   name        String    @unique
   description String
+  imageUrl    String?
   price       Float
   capacity    Int
   length      Float
+  location    String
+  category    String    @default("Lancha")
+  year        Int       @default(2024)
+  available   Boolean   @default(true)
+  rating      Float     @default(0)
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   amenities   Amenity[]

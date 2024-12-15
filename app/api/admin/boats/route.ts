@@ -51,12 +51,11 @@ export async function POST(request: NextRequest) {
       price,
       capacity,
       length,
-      amenityIds,
-      imageUrl,
       location,
       category,
-      media,
       year,
+      imageUrl,
+      amenityIds,
     } = body;
 
     // Validação básica dos campos obrigatórios
@@ -118,11 +117,11 @@ export async function POST(request: NextRequest) {
         price: parseFloat(price),
         capacity: parseInt(capacity),
         length: length ? parseFloat(length) : 0,
-        userId: session.user.id,
-        imageUrl,
         location,
         category: category || 'Lancha',
         year: year ? parseInt(year) : new Date().getFullYear(),
+        imageUrl,
+        userId: session.user.id,
         amenities: {
           connect: amenityIds ? amenityIds.map((id: string) => ({ id })) : [],
         },
@@ -134,9 +133,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Criar as mídias se houver
-    if (media && Array.isArray(media) && media.length > 0) {
+    if (body.media && Array.isArray(body.media) && body.media.length > 0) {
       await prisma.media.createMany({
-        data: media.map((media: any) => ({
+        data: body.media.map((media: any) => ({
           url: media.url,
           type: media.type || 'image',
           boatId: boat.id,
