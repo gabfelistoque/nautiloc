@@ -65,10 +65,26 @@ async function main() {
 
       // Adiciona as amenidades
       if (exampleBoat.amenities.length > 0) {
-        await tx.boatAmenity.createMany({
+        await tx.amenity.createMany({
           data: exampleBoat.amenities.map((amenity) => ({
             name: amenity.name,
-            icon: amenity.icon,
+            iconName: amenity.icon,
+          })),
+          skipDuplicates: true,
+        });
+
+        // Agora cria as relações com o barco
+        const createdAmenities = await tx.amenity.findMany({
+          where: {
+            iconName: {
+              in: exampleBoat.amenities.map(a => a.icon)
+            }
+          }
+        });
+
+        await tx.boatAmenityRelation.createMany({
+          data: createdAmenities.map((amenity) => ({
+            amenityId: amenity.id,
             boatId: newBoat.id,
           })),
         });

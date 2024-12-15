@@ -114,13 +114,13 @@ export async function PUT(
       // Atualiza as mídias
       if (media) {
         // Remove todas as mídias existentes
-        await tx.boatMedia.deleteMany({
+        await tx.media.deleteMany({
           where: { boatId: params.id },
         });
 
         // Adiciona as novas mídias
         if (media.length > 0) {
-          await tx.boatMedia.createMany({
+          await tx.media.createMany({
             data: media.map((m: any) => ({
               url: m.url,
               type: m.type,
@@ -185,7 +185,7 @@ export async function DELETE(
     }
 
     // Primeiro exclui todas as mídias associadas
-    await prisma.boatMedia.deleteMany({
+    await prisma.media.deleteMany({
       where: {
         boatId: params.id,
       },

@@ -125,8 +125,26 @@ export async function POST(request: Request) {
 
       // Criar as amenidades se houver
       if (data.amenities && Array.isArray(data.amenities) && data.amenities.length > 0) {
-        await tx.boatAmenityRelation.createMany({
+        // Primeiro, cria ou encontra as amenidades
+        await tx.amenity.createMany({
           data: data.amenities.map((amenity: any) => ({
+            name: amenity.name,
+            iconName: amenity.icon,
+          })),
+          skipDuplicates: true,
+        });
+
+        // Agora cria as relações com o barco
+        const createdAmenities = await tx.amenity.findMany({
+          where: {
+            iconName: {
+              in: data.amenities.map((a: any) => a.icon)
+            }
+          }
+        });
+
+        await tx.boatAmenityRelation.createMany({
+          data: createdAmenities.map((amenity) => ({
             amenityId: amenity.id,
             boatId: boat.id,
           })),
