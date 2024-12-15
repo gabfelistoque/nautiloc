@@ -133,20 +133,17 @@ export async function PUT(
       // Atualiza as amenidades
       if (amenities) {
         // Remove todas as amenidades existentes
-        await tx.boatAmenity.deleteMany({
+        await tx.boatAmenityRelation.deleteMany({
           where: { boatId: params.id },
         });
 
         // Adiciona as novas amenidades
-        if (amenities.length > 0) {
-          await tx.boatAmenity.createMany({
-            data: amenities.map((amenity: any) => ({
-              name: amenity.name,
-              icon: typeof amenity.icon === 'string' ? amenity.icon : 'WifiIcon',
-              boatId: params.id,
-            })),
-          });
-        }
+        await tx.boatAmenityRelation.createMany({
+          data: amenities.map((amenityId) => ({
+            boatId: params.id,
+            amenityId,
+          })),
+        });
       }
 
       // Retorna o barco atualizado com suas relações
