@@ -139,7 +139,7 @@ export async function PUT(
 
         // Adiciona as novas amenidades
         await tx.boatAmenityRelation.createMany({
-          data: amenities.map((amenityId) => ({
+          data: (amenities as string[]).map((amenityId: string) => ({
             boatId: params.id,
             amenityId,
           })),
