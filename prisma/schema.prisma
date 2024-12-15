@@ -73,8 +73,6 @@ model Boat {
   length      Float     @default(0.0)    // Comprimento em metros
   year        Int       @default(2000)   // Ano do barco
   category    String    @default("Lancha") // Categoria do barco (ex: Lancha, Veleiro, etc)
-  features    String    @default("[]")   // Lista de características do barco em JSON
-  images      String    @default("[]")   // Lista de URLs das imagens em JSON
   amenities   BoatAmenityRelation[] // Relação com as amenidades
   bookings    Booking[]
   media       Media[]

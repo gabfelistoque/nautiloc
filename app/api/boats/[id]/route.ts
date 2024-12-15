@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -27,11 +27,7 @@ export async function GET(
       },
       include: {
         media: true,
-        amenities: {
-          include: {
-            amenity: true,
-          },
-        },
+        amenities: true,
       },
     });
     
@@ -45,11 +41,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      ...boat,
-      features: JSON.parse(boat.features),
-      images: JSON.parse(boat.images),
-    });
+    return NextResponse.json(boat);
   } catch (error) {
     console.error('GET - Erro ao buscar barco:', error);
     return NextResponse.json(
@@ -87,9 +79,7 @@ export async function PUT(
       length,
       year,
       category,
-      amenities,
-      features,
-      images
+      amenities
     } = body;
 
     // Validações básicas
@@ -118,21 +108,19 @@ export async function PUT(
           length: length || null,
           year: year || null,
           category: category || null,
-          features: JSON.stringify(features),
-          images: JSON.stringify(images),
         },
       });
 
       // Atualiza as mídias
       if (media) {
         // Remove todas as mídias existentes
-        await tx.media.deleteMany({
+        await tx.boatMedia.deleteMany({
           where: { boatId: params.id },
         });
 
         // Adiciona as novas mídias
         if (media.length > 0) {
-          await tx.media.createMany({
+          await tx.boatMedia.createMany({
             data: media.map((m: any) => ({
               url: m.url,
               type: m.type,
@@ -145,16 +133,17 @@ export async function PUT(
       // Atualiza as amenidades
       if (amenities) {
         // Remove todas as amenidades existentes
-        await tx.boatAmenityRelation.deleteMany({
+        await tx.boatAmenity.deleteMany({
           where: { boatId: params.id },
         });
 
         // Adiciona as novas amenidades
         if (amenities.length > 0) {
-          await tx.boatAmenityRelation.createMany({
-            data: amenities.map((amenityId: string) => ({
+          await tx.boatAmenity.createMany({
+            data: amenities.map((amenity: any) => ({
+              name: amenity.name,
+              icon: typeof amenity.icon === 'string' ? amenity.icon : 'WifiIcon',
               boatId: params.id,
-              amenityId,
             })),
           });
         }
@@ -165,11 +154,7 @@ export async function PUT(
         where: { id: params.id },
         include: {
           media: true,
-          amenities: {
-            include: {
-              amenity: true,
-            },
-          },
+          amenities: true,
         },
       });
     });
@@ -199,45 +184,21 @@ export async function DELETE(
       );
     }
 
-    // Get the boat's media first
-    const boat = await prisma.boat.findUnique({
-      where: { id: params.id },
-      include: { 
-        media: true,
-        amenities: true
-      }
+    // Primeiro exclui todas as mídias associadas
+    await prisma.boatMedia.deleteMany({
+      where: {
+        boatId: params.id,
+      },
     });
 
-    if (!boat) {
-      return NextResponse.json(
-        { error: 'Barco não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Delete the boat and all related media in a transaction
-    await prisma.$transaction(async (tx) => {
-      // Delete all media first
-      if (boat.media.length > 0) {
-        await tx.media.deleteMany({
-          where: { boatId: params.id }
-        });
-      }
-
-      // Delete all amenity relations
-      if (boat.amenities.length > 0) {
-        await tx.boatAmenityRelation.deleteMany({
-          where: { boatId: params.id }
-        });
-      }
-
-      // Then delete the boat
-      await tx.boat.delete({
-        where: { id: params.id }
-      });
+    // Depois exclui o barco
+    const boat = await prisma.boat.delete({
+      where: {
+        id: params.id,
+      },
     });
 
-    return NextResponse.json({ message: "Boat deleted successfully" });
+    return NextResponse.json(boat);
   } catch (error) {
     console.error('Error deleting boat:', error);
     return NextResponse.json(
