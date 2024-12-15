@@ -69,20 +69,20 @@ interface BoatFormData {
 
 export default function EditBoatPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<BoatFormData>({
     name: '',
     description: '',
     imageUrl: '',
-    capacity: 1,
+    capacity: 0,
     location: '',
     pricePerDay: 0,
     length: 0,
     year: new Date().getFullYear(),
-    category: 'Lancha',
-    amenities: [],
+    category: boatCategories[0],
+    amenities: []
   });
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchBoat = async () => {
