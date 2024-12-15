@@ -49,7 +49,7 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { name, description, pricePerDay, capacity, length, features, images } = body;
+    const { name, description, pricePerDay, capacity, length } = body;
 
     const boat = await prisma.boat.update({
       where: {
@@ -61,8 +61,6 @@ export async function PUT(
         pricePerDay,
         capacity,
         length,
-        features,
-        images,
         updatedAt: new Date(),
       },
     });
