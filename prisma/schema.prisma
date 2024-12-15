@@ -1,28 +1,13 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String
-  role          String    @default("USER")
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  bookings      Booking[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model Account {
@@ -52,6 +37,22 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String
+  role          String    @default("USER")
+  accounts      Account[]
+  sessions      Session[]
+  boats         Boat[]
+  bookings      Booking[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -61,34 +62,28 @@ model VerificationToken {
 }
 
 model Boat {
-  id          String    @id @default(cuid())
-  name        String    @unique
+  id          String   @id @default(cuid())
+  name        String
   description String
-  imageUrl    String
+  price       Float
   capacity    Int
-  location    String
-  pricePerDay Float
-  available   Boolean   @default(true)
-  rating      Float     @default(5.0)
-  length      Float     @default(0.0)    // Comprimento em metros
-  year        Int       @default(2000)   // Ano do barco
-  category    String    @default("Lancha") // Categoria do barco (ex: Lancha, Veleiro, etc)
-  amenities   BoatAmenityRelation[] // Relação com as amenidades
-  bookings    Booking[]
+  length      Float
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  amenities   Amenity[]
   media       Media[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Amenity {
-  id          String    @id @default(cuid())
-  name        String    // Nome do item (ex: "Wi-Fi", "Chuveiro", etc)
-  iconName    String    // Nome do ícone (ex: "wifi", "shower", etc)
-  boats       BoatAmenityRelation[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@unique([iconName])
+  id        String   @id @default(cuid())
+  name      String
+  iconName  String   @unique
+  boats     Boat[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BoatAmenityRelation {
