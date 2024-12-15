@@ -54,7 +54,7 @@ async function main() {
 
       // Adiciona as mídias
       if (exampleBoat.media.length > 0) {
-        await tx.boatMedia.createMany({
+        await tx.media.createMany({
           data: exampleBoat.media.map((m) => ({
             url: m.url,
             type: m.type,
