@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { uploadToCloudinary, deleteFromCloudinary } from '@/lib/cloudinary';
+
+interface MediaRequestBody {
+  url: string;
+  type: 'IMAGE' | 'VIDEO';
+  publicId?: string;
+}
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const mediaType = formData.get('type') as string;
@@ -27,14 +41,17 @@ export async function POST(
       const result = await uploadToCloudinary(file);
       const cloudinaryResult = result as any;
 
-      return prisma.boatMedia.create({
+      return prisma.media.create({
         data: {
           url: cloudinaryResult.secure_url,
           type: mediaType,
-          boatId: params.id,
-          // Salva o public_id do Cloudinary para poder deletar depois
           publicId: cloudinaryResult.public_id,
-        },
+          boat: {
+            connect: {
+              id: params.id
+            }
+          }
+        }
       });
     });
 
@@ -42,11 +59,8 @@ export async function POST(
 
     return NextResponse.json(media);
   } catch (error) {
-    console.error('Erro ao fazer upload:', error);
-    return NextResponse.json(
-      { error: 'Erro ao fazer upload das mídias' },
-      { status: 500 }
-    );
+    console.error("[MEDIA_CREATE]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
@@ -55,9 +69,15 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const { mediaId } = await request.json();
 
-    const media = await prisma.boatMedia.findFirst({
+    const media = await prisma.media.findFirst({
       where: {
         id: mediaId,
         boatId: params.id,
@@ -76,16 +96,41 @@ export async function DELETE(
       await deleteFromCloudinary(media.publicId);
     }
 
-    await prisma.boatMedia.delete({
+    await prisma.media.delete({
       where: { id: mediaId },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Erro ao excluir mídia:', error);
-    return NextResponse.json(
-      { error: 'Erro ao excluir mídia' },
-      { status: 500 }
-    );
+    console.error("[MEDIA_DELETE]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { mediaOrder } = await request.json();
+
+    // Update each media item's order
+    for (const item of mediaOrder) {
+      await prisma.media.update({
+        where: { id: item.id },
+        data: { order: item.order }
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[MEDIA_REORDER]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
