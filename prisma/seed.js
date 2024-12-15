@@ -7,11 +7,12 @@ async function main() {
   try {
     // Criar usuário admin
     const hashedPassword = await bcrypt.hash('admin123', 10);
-    await prisma.user.upsert({
+    const admin = await prisma.user.upsert({
       where: { email: 'admin@example.com' },
       update: {
         password: hashedPassword,
         role: 'ADMIN',
+        name: 'Admin',
       },
       create: {
         email: 'admin@example.com',
@@ -20,6 +21,8 @@ async function main() {
         role: 'ADMIN',
       },
     });
+
+    console.log('Admin user created:', admin);
 
     // Criar amenidades padrão
     const amenities = [
@@ -41,11 +44,12 @@ async function main() {
     ];
 
     for (const amenity of amenities) {
-      await prisma.amenity.upsert({
+      const created = await prisma.amenity.upsert({
         where: { iconName: amenity.iconName },
         update: {},
         create: amenity
       });
+      console.log('Created amenity:', created);
     }
 
     console.log('Seed completed successfully');
