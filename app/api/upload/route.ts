@@ -15,11 +15,20 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
+    const files = formData.getAll('files');
 
-    const uploadedFiles = [];
+    interface UploadedFile {
+      url: string;
+      type: string;
+    }
+
+    const uploadedFiles: UploadedFile[] = [];
 
     for (const file of files) {
+      if (!(file instanceof File)) {
+        continue;
+      }
+
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
