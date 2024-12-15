@@ -103,14 +103,15 @@ model Media {
 }
 
 model Booking {
-  id        String   @id @default(cuid())
-  startDate DateTime
-  endDate   DateTime
-  status    String   @default("pending")
-  boatId    String
-  boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  startDate  DateTime
+  endDate    DateTime
+  status     String   @default("pending")
+  totalPrice Float    @default(0)
+  boatId     String
+  boat       Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

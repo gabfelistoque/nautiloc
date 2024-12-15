@@ -1,55 +1,85 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-const prisma = new PrismaClient();
-
-export async function GET() {
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
+export async function GET(request: NextRequest) {
   try {
-    const [totalBoats, totalBookings, activeBookings, bookings] = await Promise.all([
-      prisma.boat.count(),
-      prisma.booking.count(),
-      prisma.booking.count({
-        where: {
-          status: 'CONFIRMADO',
-          endDate: {
-            gte: new Date(),
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== "ADMIN") {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Contar total de barcos
+    const totalBoats = await prisma.boat.count();
+
+    // Contar total de usuários (excluindo admins)
+    const totalUsers = await prisma.user.count({
+      where: {
+        role: "USER",
+      },
+    });
+
+    // Buscar reservas confirmadas com seus barcos
+    const bookings = await prisma.booking.findMany({
+      where: {
+        status: "confirmed",
+      },
+      include: {
+        boat: true,
+      },
+    });
+
+    // Calcular receita total das reservas confirmadas
+    const revenue = bookings.reduce((total, booking) => {
+      const days = Math.ceil(
+        (booking.endDate.getTime() - booking.startDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return total + (booking.boat.price * days);
+    }, 0);
+
+    // Calcular total de reservas por status
+    const bookingsByStatus = await prisma.booking.groupBy({
+      by: ["status"],
+      _count: true,
+    });
+
+    // Formatar contagem de reservas por status
+    const bookingStats = Object.fromEntries(
+      bookingsByStatus.map((item) => [item.status, item._count])
+    );
+
+    // Buscar barcos mais populares (com mais reservas)
+    const popularBoats = await prisma.boat.findMany({
+      take: 5,
+      include: {
+        _count: {
+          select: {
+            bookings: true,
           },
         },
-      }),
-      prisma.booking.findMany({
-        where: {
-          status: 'CONFIRMADO',
+      },
+      orderBy: {
+        bookings: {
+          _count: "desc",
         },
-        include: {
-          boat: true,
-        },
-      }),
-    ]);
-
-    // Calcular receita total apenas das reservas confirmadas
-    const revenue = bookings.reduce((total, booking) => {
-      return total + booking.totalPrice;
-    }, 0);
+      },
+    });
 
     return NextResponse.json({
       totalBoats,
-      totalBookings,
-      activeBookings,
+      totalUsers,
       revenue,
+      bookings: bookingStats,
+      popularBoats: popularBoats.map((boat) => ({
+        id: boat.id,
+        name: boat.name,
+        bookings: boat._count.bookings,
+      })),
     });
   } catch (error) {
-    console.error('Error fetching stats:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error("[STATS_GET]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
