@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/setup-db.js && prisma generate && prisma db push && prisma db seed && next build",
+    "build": "node scripts/setup-db.js && prisma generate && prisma db push --accept-data-loss && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "seed-amenities": "ts-node --esm scripts/seed-amenities.ts",
