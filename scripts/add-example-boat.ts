@@ -77,6 +77,7 @@ async function main() {
           year: exampleBoat.year,
           category: exampleBoat.category,
           userId: adminUser.id,
+          rating: 4.5, // Adicionando uma avaliação inicial
           amenities: {
             connect: amenities.map(amenity => ({ id: amenity.id }))
           },
