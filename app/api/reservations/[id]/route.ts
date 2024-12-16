@@ -58,11 +58,10 @@ export async function DELETE(
       );
     }
 
-    // Atualizar o status da reserva para CANCELADO e liberar o barco
+    // Deletar a reserva e liberar o barco
     await prisma.$transaction([
-      prisma.booking.update({
+      prisma.booking.delete({
         where: { id: params.id },
-        data: { status: 'CANCELADO' },
       }),
       prisma.boat.update({
         where: { id: booking.boatId },
@@ -70,7 +69,7 @@ export async function DELETE(
       }),
     ]);
 
-    return NextResponse.json({ message: 'Reserva cancelada com sucesso' });
+    return NextResponse.json({ message: 'Reserva deletada com sucesso' });
   } catch (error) {
     console.error('Erro ao cancelar reserva:', error);
     return NextResponse.json(

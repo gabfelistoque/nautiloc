@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,18 +8,7 @@ import { ptBR } from 'date-fns/locale';
 interface BookingStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
-  booking: {
-    id: string;
-    startDate: Date;
-    endDate: Date;
-    status: string;
-    boat: {
-      name: string;
-    };
-    user: {
-      name: string;
-    };
-  } | null;
+  booking: any;
   onStatusChange: (bookingId: string, newStatus: string) => Promise<void>;
 }
 
@@ -38,8 +27,14 @@ export default function BookingStatusModal({
   if (!booking) return null;
 
   const handleStatusChange = async (newStatus: string) => {
-    await onStatusChange(booking.id, newStatus);
-    onClose();
+    if (newStatus === booking.status) return;
+    
+    try {
+      await onStatusChange(booking.id, newStatus);
+      onClose();
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+    }
   };
 
   return (
@@ -86,8 +81,8 @@ export default function BookingStatusModal({
                       </p>
                       <p className="text-gray-600">
                         <span className="font-semibold">Período:</span>{' '}
-                        {format(booking.startDate, "dd 'de' MMMM", { locale: ptBR })} -{' '}
-                        {format(booking.endDate, "dd 'de' MMMM", { locale: ptBR })}
+                        {format(new Date(booking.startDate), "dd 'de' MMMM", { locale: ptBR })} -{' '}
+                        {format(new Date(booking.endDate), "dd 'de' MMMM", { locale: ptBR })}
                       </p>
                       <p className="text-gray-600">
                         <span className="font-semibold">Status atual:</span>{' '}
@@ -103,9 +98,10 @@ export default function BookingStatusModal({
                       <button
                         key={option.value}
                         onClick={() => handleStatusChange(option.value)}
-                        className={`px-4 py-2 text-sm font-medium rounded-md ${
-                          booking.status === option.value
-                            ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-600'
+                        disabled={option.value === booking.status}
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                          option.value === booking.status
+                            ? 'bg-blue-600 text-white cursor-default'
                             : 'bg-white text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50'
                         }`}
                       >

@@ -5,9 +5,16 @@ import BookingCalendar from '@/components/BookingCalendar';
 
 interface DashboardStats {
   totalBoats: number;
-  totalBookings: number;
-  activeBookings: number;
+  totalUsers: number;
   revenue: number;
+  bookings: {
+    [key: string]: number;
+  };
+  popularBoats: Array<{
+    id: string;
+    name: string;
+    bookings: number;
+  }>;
 }
 
 interface Booking {
@@ -123,7 +130,7 @@ export default function DashboardPage() {
                     Total de Reservas
                   </dt>
                   <dd className="text-lg font-semibold text-gray-900">
-                    {stats.totalBookings}
+                    {Object.values(stats.bookings).reduce((a, b) => a + b, 0)}
                   </dd>
                 </dl>
               </div>
@@ -146,7 +153,7 @@ export default function DashboardPage() {
                     Reservas Ativas
                   </dt>
                   <dd className="text-lg font-semibold text-gray-900">
-                    {stats.activeBookings}
+                    {stats.bookings['CONFIRMADO'] || 0}
                   </dd>
                 </dl>
               </div>

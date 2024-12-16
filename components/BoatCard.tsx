@@ -7,7 +7,7 @@ interface BoatCardProps {
   id: string;
   name: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   capacity: number;
   location: string;
   price: number;
@@ -18,7 +18,7 @@ export default function BoatCard({
   id,
   name,
   description,
-  imageUrl,
+  imageUrl = '/images/default-boat.jpg',
   capacity,
   location,
   price,

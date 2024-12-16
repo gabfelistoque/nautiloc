@@ -198,20 +198,32 @@ export default function BookingCalendar({ bookings }: BookingCalendarProps) {
         throw new Error('Erro ao atualizar status');
       }
 
+      // Atualizar a reserva selecionada
+      if (selectedBooking && selectedBooking.id === bookingId) {
+        setSelectedBooking({
+          ...selectedBooking,
+          status: newStatus
+        });
+      }
+
       // Atualizar a lista de reservas localmente
       const updatedBookings = bookings.map(booking =>
         booking.id === bookingId
           ? { ...booking, status: newStatus }
           : booking
       );
-      setFilteredEvents(updatedBookings.map(booking => ({
+
+      // Atualizar eventos filtrados
+      const updatedEvents = updatedBookings.map(booking => ({
         id: booking.id,
         title: `${booking.boat.name} - ${booking.user.name}`,
         start: new Date(booking.startDate),
         end: new Date(booking.endDate),
         status: booking.status,
         boatId: booking.boat.id,
-      })));
+      }));
+
+      setFilteredEvents(updatedEvents);
 
     } catch (error) {
       console.error('Error updating booking status:', error);

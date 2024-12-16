@@ -81,87 +81,31 @@ async function main() {
       console.log('Amenidade criada:', created);
     }
 
-    // Cria os barcos
-    const boats = [
-      {
-        name: 'Veleiro Sunset',
-        description: 'Um elegante veleiro de 40 pés, perfeito para passeios ao pôr do sol. Equipado com 3 cabines, cozinha completa e área de lazer.',
-        imageUrl: 'https://res.cloudinary.com/gaburo/image/upload/v1734179325/boats/veleiro-sunset-main.jpg',
-        capacity: 8,
+    // Criar o barco com as amenidades
+    const boat = await prisma.boat.create({
+      data: {
+        name: 'Lancha Exemplo',
+        description: 'Uma lancha de luxo para suas férias',
+        imageUrl: 'https://example.com/boat.jpg',
+        price: 1500,
+        capacity: 10,
+        length: 25,
         location: 'Marina da Glória, Rio de Janeiro',
-        pricePerDay: 1200.00,
-        length: 40.0,
-        year: 2020,
-        category: 'Veleiro',
-        amenities: ['wifi', 'shower', 'water', 'ac'],
-        media: [
-          {
-            url: 'https://res.cloudinary.com/gaburo/image/upload/v1734179325/boats/veleiro-sunset-1.jpg',
-            type: 'IMAGE'
-          },
-          {
-            url: 'https://res.cloudinary.com/gaburo/image/upload/v1734179326/boats/veleiro-sunset-2.jpg',
-            type: 'IMAGE'
-          },
-          {
-            url: 'https://res.cloudinary.com/gaburo/video/upload/v1734179333/boats/veleiro-sunset-tour.mp4',
-            type: 'VIDEO'
-          }
-        ]
-      },
-      {
-        name: 'Lancha Sport 32',
-        description: 'Lancha esportiva de 32 pés com design moderno. Ideal para passeios diurnos e esportes aquáticos. Inclui equipamentos para wakeboard.',
-        imageUrl: 'https://res.cloudinary.com/gaburo/image/upload/v1734179328/boats/lancha-sport-2.jpg',
-        capacity: 12,
-        location: 'Marina da Glória, Rio de Janeiro',
-        pricePerDay: 1500.00,
-        length: 32.0,
-        year: 2022,
         category: 'Lancha',
-        amenities: ['wifi', 'sound', 'sunarea', 'water'],
-        media: [
-          {
-            url: 'https://res.cloudinary.com/gaburo/image/upload/v1734179327/boats/lancha-sport-1.jpg',
-            type: 'IMAGE'
-          },
-          {
-            url: 'https://res.cloudinary.com/gaburo/image/upload/v1734179329/boats/lancha-sport-3.jpg',
-            type: 'IMAGE'
-          }
-        ]
-      }
-    ];
-
-    for (const boatData of boats) {
-      const { media, amenities: boatAmenities, ...boat } = boatData;
-      const createdBoat = await prisma.boat.create({
-        data: {
-          ...boat,
-          amenities: {
-            create: await Promise.all(boatAmenities.map(async (iconName) => {
-              const amenity = await prisma.amenity.findUnique({
-                where: { iconName }
-              });
-              if (!amenity) {
-                throw new Error(`Amenidade com iconName ${iconName} não encontrada`);
-              }
-              return {
-                amenity: {
-                  connect: {
-                    id: amenity.id
-                  }
-                }
-              };
-            }))
-          },
-          media: {
-            create: media
-          }
+        year: 2024,
+        available: true,
+        rating: 4.5,
+        userId: user.id,
+        amenities: {
+          create: amenities.map(amenity => ({
+            name: amenity.name,
+            iconName: amenity.iconName
+          }))
         }
-      });
-      console.log('Barco criado:', createdBoat);
-    }
+      }
+    });
+
+    console.log('Barco criado:', boat);
 
     console.log('Seed completed successfully');
   } catch (error) {
