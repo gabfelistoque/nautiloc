@@ -89,6 +89,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!session.user.id) {
+      return NextResponse.json(
+        { error: 'ID do usuário não encontrado' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     console.log('Request body:', body);
     
@@ -195,6 +202,7 @@ export async function POST(request: Request) {
             length: Number(length),
             year: Number(year),
             category,
+            userId: session.user.id,
             amenities: {
               connect: processedAmenities.map(amenity => ({
                 id: amenity.id

@@ -150,6 +150,13 @@ export async function PUT(
         include: {
           amenities: true,
           media: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
         },
       });
 
