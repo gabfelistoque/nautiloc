@@ -86,14 +86,14 @@ export default function BoatsPage() {
                 {/* Imagem Principal */}
                 <div className="relative h-64">
                   <img
-                    src={boat.imageUrl}
+                    src={boat.imageUrl || '/placeholder-boat.jpg'}
                     alt={boat.name}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full shadow-md">
                     <div className="flex items-center space-x-1">
                       <StarIcon className="w-4 h-4 text-yellow-400" />
-                      <span className="text-sm font-medium">{boat.rating.toFixed(1)}</span>
+                      <span className="text-sm font-medium">{Number(boat.rating || 0).toFixed(1)}</span>
                     </div>
                   </div>
                   {!boat.available && (
@@ -115,7 +115,7 @@ export default function BoatsPage() {
                         {new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
                           currency: 'BRL'
-                        }).format(boat.pricePerDay)}
+                        }).format(Number(boat.price))}
                       </p>
                       <p className="text-sm text-gray-500">por dia</p>
                     </div>
