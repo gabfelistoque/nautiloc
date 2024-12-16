@@ -16,11 +16,7 @@ export async function GET(
       },
       include: {
         media: true,
-        amenities: {
-          include: {
-            amenity: true
-          }
-        },
+        amenities: true,
         bookings: {
           include: {
             user: {
@@ -46,9 +42,9 @@ export async function GET(
     const formattedBoat = {
       ...boat,
       amenities: boat.amenities.map(amenity => ({
-        id: amenity.amenity.id,
-        name: amenity.amenity.name,
-        iconName: amenity.amenity.iconName,
+        id: amenity.id,
+        name: amenity.name,
+        iconName: amenity.iconName,
       })),
       bookings: boat.bookings.map(booking => ({
         id: booking.id,

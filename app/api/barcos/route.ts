@@ -23,11 +23,7 @@ export async function GET(request: Request) {
       const boats = await prisma.boat.findMany({
         include: {
           media: true,
-          amenities: {
-            include: {
-              amenity: true
-            }
-          },
+          amenities: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -38,9 +34,9 @@ export async function GET(request: Request) {
       const formattedBoats = boats.map(boat => ({
         ...boat,
         amenities: boat.amenities.map(amenity => ({
-          id: amenity.amenity.id,
-          name: amenity.amenity.name,
-          iconName: amenity.amenity.iconName,
+          id: amenity.id,
+          name: amenity.name,
+          iconName: amenity.iconName,
         })),
       }));
 
@@ -54,11 +50,7 @@ export async function GET(request: Request) {
       },
       include: {
         media: true,
-        amenities: {
-          include: {
-            amenity: true
-          }
-        },
+        amenities: true,
       },
       orderBy: {
         rating: 'desc',
@@ -69,9 +61,9 @@ export async function GET(request: Request) {
     const formattedBoats = boats.map(boat => ({
       ...boat,
       amenities: boat.amenities.map(amenity => ({
-        id: amenity.amenity.id,
-        name: amenity.amenity.name,
-        iconName: amenity.amenity.iconName,
+        id: amenity.id,
+        name: amenity.name,
+        iconName: amenity.iconName,
       })),
     }));
 
