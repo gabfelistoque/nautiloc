@@ -22,28 +22,25 @@ export async function GET(request: Request) {
         userId: session.user.id,
       },
       include: {
-        boat: true,
+        boat: {
+          include: {
+            media: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    // Para cada reserva, buscar o usuário separadamente
-    const bookingsWithUser = await Promise.all(
-      bookings.map(async (booking) => {
-        const user = await prisma.user.findUnique({
-          where: { id: booking.userId },
-          select: { name: true, email: true },
-        });
-        return {
-          ...booking,
-          user,
-        };
-      })
-    );
-
-    return NextResponse.json(bookingsWithUser);
+    return NextResponse.json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
     return NextResponse.json(
@@ -56,7 +53,6 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    console.log('Session:', JSON.stringify(session, null, 2));
     
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -78,7 +74,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    console.log('Request body:', body);
     
     const { boatId, startDate, endDate, guests, totalPrice } = body;
 
@@ -87,21 +82,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         error: 'Todos os campos são obrigatórios' 
       }, { status: 400 });
-    }
-
-    // Verificar se o barco existe e está disponível
-    const boat = await prisma.boat.findUnique({
-      where: { 
-        id: boatId,
-        available: true
-      },
-    });
-
-    if (!boat) {
-      return NextResponse.json(
-        { error: 'Barco não encontrado ou não está disponível' },
-        { status: 404 }
-      );
     }
 
     // Converter strings de data para objetos Date
@@ -126,44 +106,67 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Verificar se há conflito com outras reservas
-    const conflictingBooking = await prisma.booking.findFirst({
-      where: {
-        boatId,
-        status: 'CONFIRMED',
-        OR: [
-          {
-            AND: [
-              { startDate: { lte: start } },
-              { endDate: { gt: start } }
-            ]
-          },
-          {
-            AND: [
-              { startDate: { lt: end } },
-              { endDate: { gte: end } }
+    // Buscar o barco
+    const boat = await prisma.boat.findUnique({
+      where: { id: boatId },
+      select: {
+        id: true,
+        price: true,
+        available: true,
+        bookings: {
+          where: {
+            OR: [
+              {
+                AND: [
+                  { startDate: { lte: start } },
+                  { endDate: { gt: start } }
+                ]
+              },
+              {
+                AND: [
+                  { startDate: { lt: end } },
+                  { endDate: { gte: end } }
+                ]
+              }
             ]
           }
-        ]
+        }
       }
     });
 
-    if (conflictingBooking) {
-      return NextResponse.json({
-        error: 'O barco já está reservado para este período'
-      }, { status: 400 });
+    if (!boat) {
+      return NextResponse.json(
+        { error: 'Barco não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    if (!boat.available) {
+      return NextResponse.json(
+        { error: 'Barco não está disponível' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se há conflito de datas
+    if (boat.bookings.length > 0) {
+      return NextResponse.json(
+        { error: 'Barco já está reservado para este período' },
+        { status: 400 }
+      );
     }
 
     // Calcular preço total
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const calculatedPrice = diffDays * boat.pricePerDay;
+    const calculatedPrice = diffDays * boat.price;
 
     // Verificar se o preço calculado corresponde ao preço enviado
     if (Math.abs(calculatedPrice - totalPrice) > 0.01) {
-      return NextResponse.json({
-        error: 'O preço total não corresponde ao período selecionado'
-      }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Preço total inválido' },
+        { status: 400 }
+      );
     }
 
     // Criar a reserva
@@ -178,9 +181,14 @@ export async function POST(request: Request) {
         boatId: boat.id,
       },
       include: {
-        boat: true,
+        boat: {
+          include: {
+            media: true
+          }
+        },
         user: {
           select: {
+            id: true,
             name: true,
             email: true
           }

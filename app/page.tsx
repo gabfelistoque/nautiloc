@@ -21,7 +21,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
-      <div className="hero-section relative h-[600px] flex items-center justify-center text-white">
+      <div className="hero-section relative h-[700px] md:h-[600px] flex items-center justify-center text-white">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?ixlib=rb-4.0.3"
@@ -35,11 +35,11 @@ export default async function Home() {
         </div>
         <div className="container relative z-10 mx-auto px-4">
           <div className="text-center mb-8">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <h1 className="text-4xl md:text-7xl font-bold mb-4 md:mb-6">
               Navegue pela Aventura
             </h1>
-            <p className="text-xl md:text-2xl text-gray-200">
-              Descubra os melhores barcos para sua experiência náutica
+            <p className="text-lg md:text-2xl text-gray-200">
+              Descubra os melhores barcos para sua experiência!
             </p>
           </div>
 
