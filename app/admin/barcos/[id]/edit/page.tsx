@@ -47,7 +47,7 @@ interface BoatFormData {
   imageUrl: string;
   capacity: number;
   location: string;
-  pricePerDay: number;
+  price: number;
   available: boolean;
   media: Media[];
   length: number;
@@ -68,7 +68,7 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
     imageUrl: '',
     capacity: 0,
     location: '',
-    pricePerDay: 0,
+    price: 0,
     available: true,
     media: [],
     length: 0,
@@ -117,7 +117,7 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
           imageUrl: data.imageUrl,
           capacity: data.capacity,
           location: data.location,
-          pricePerDay: data.pricePerDay,
+          price: data.price,
           available: data.available,
           media: data.media || [],
           length: data.length || 0,
@@ -196,7 +196,7 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
     try {
       const formattedData = {
         ...formData,
-        pricePerDay: Number(formData.pricePerDay),
+        price: Number(formData.price),
         capacity: Number(formData.capacity),
         length: Number(formData.length),
         year: Number(formData.year),
@@ -458,8 +458,8 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
                   </div>
 
                   <div>
-                    <label htmlFor="pricePerDay" className="block text-sm font-medium text-gray-700">
-                      Preço por dia
+                    <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                      Preço por Dia
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -467,9 +467,9 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
                       </div>
                       <input
                         type="number"
-                        name="pricePerDay"
-                        id="pricePerDay"
-                        value={formData.pricePerDay}
+                        name="price"
+                        id="price"
+                        value={formData.price}
                         onChange={handleChange}
                         className="mt-1 p-3 pl-12 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border border-gray-300 rounded-md"
                       />
