@@ -58,7 +58,7 @@ export default async function Home() {
               id={boat.id}
               name={boat.name}
               description={boat.description}
-              imageUrl={boat.imageUrl}
+              imageUrl={boat.imageUrl || undefined}
               capacity={boat.capacity}
               location={boat.location}
               price={boat.price}
