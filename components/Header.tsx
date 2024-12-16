@@ -22,12 +22,12 @@ export default function Header() {
           
           {/* Links de navegação centralizados */}
           <div className="flex-grow flex justify-center">
-            <div className="hidden sm:flex sm:space-x-8">
+            <div className="hidden sm:flex sm:space-x-8 h-16">
               {session?.user?.role === 'ADMIN' ? (
                 <>
                   <Link
                     href="/admin/dashboard"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 h-full border-b-2 text-sm font-medium ${
                       pathname === '/admin/dashboard'
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -37,7 +37,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/admin/barcos"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 h-full border-b-2 text-sm font-medium ${
                       pathname?.startsWith('/admin/barcos')
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -47,7 +47,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/admin/reservas"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 h-full border-b-2 text-sm font-medium ${
                       pathname?.startsWith('/admin/reservas')
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -57,7 +57,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/admin/usuarios"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 h-full border-b-2 text-sm font-medium ${
                       pathname?.startsWith('/admin/usuarios')
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -70,7 +70,7 @@ export default function Header() {
                 <>
                   <Link
                     href="/barcos"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 h-full border-b-2 text-sm font-medium ${
                       pathname === '/barcos'
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -80,7 +80,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/minhas-reservas"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 h-full border-b-2 text-sm font-medium ${
                       pathname === '/minhas-reservas'
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
