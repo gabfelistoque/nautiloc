@@ -20,7 +20,10 @@ export default function BoatsPage() {
     const fetchBoats = async () => {
       try {
         console.log('Iniciando busca de barcos...');
-        const response = await fetch('/api/barcos');
+        const response = await fetch('/api/barcos', {
+          cache: 'no-store',
+          next: { revalidate: 0 }
+        });
         console.log('Resposta da API:', response.status);
         if (!response.ok) {
           throw new Error('Falha ao carregar barcos');

@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     }
 
     // Para usuários normais, retorna apenas barcos disponíveis
+    console.log('Buscando barcos disponíveis...');
     const boats = await prisma.boat.findMany({
       where: {
         available: true,
@@ -57,7 +58,13 @@ export async function GET(request: Request) {
       },
     });
     
-    console.log('Barcos encontrados:', boats);
+    console.log('Total de barcos encontrados:', boats.length);
+    console.log('Detalhes dos barcos:', boats.map(boat => ({
+      id: boat.id,
+      name: boat.name,
+      available: boat.available,
+      createdAt: boat.createdAt
+    })));
     
     // Formata os dados antes de enviar
     const formattedBoats = boats.map(boat => ({
