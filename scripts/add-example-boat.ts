@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -15,11 +16,11 @@ async function main() {
     year: 2020,
     category: "Veleiro",
     amenities: [
-      { name: "Wi-Fi", icon: "WifiIcon" },
-      { name: "Ar Condicionado", icon: "SignalIcon" },
-      { name: "Som", icon: "MusicalNoteIcon" },
-      { name: "Churrasqueira", icon: "FireIcon" },
-      { name: "Área de Sol", icon: "SunIcon" }
+      { name: "Wi-Fi", iconName: "wifi" },
+      { name: "Ar Condicionado", iconName: "wind" },
+      { name: "Som", iconName: "music" },
+      { name: "Churrasqueira", iconName: "barbecue" },
+      { name: "Área de Sol", iconName: "sun" }
     ],
     media: [
       {
@@ -34,9 +35,35 @@ async function main() {
   };
 
   try {
+    // Primeiro, garante que existe um usuário admin
+    const adminUser = await prisma.user.upsert({
+      where: { email: 'admin@example.com' },
+      update: {},
+      create: {
+        email: 'admin@example.com',
+        name: 'Admin',
+        password: await bcrypt.hash('admin123', 10),
+        role: 'ADMIN'
+      }
+    });
+
     // Cria o barco com suas mídias em uma transação
     const boat = await prisma.$transaction(async (tx) => {
-      // Primeiro, cria o barco
+      // Primeiro, cria as amenidades se não existirem
+      const amenities = await Promise.all(
+        exampleBoat.amenities.map(async (amenity) => {
+          return await tx.amenity.upsert({
+            where: { iconName: amenity.iconName },
+            update: {},
+            create: {
+              name: amenity.name,
+              iconName: amenity.iconName,
+            },
+          });
+        })
+      );
+
+      // Cria o barco com as amenidades
       const newBoat = await tx.boat.create({
         data: {
           name: exampleBoat.name,
@@ -49,65 +76,21 @@ async function main() {
           length: exampleBoat.length,
           year: exampleBoat.year,
           category: exampleBoat.category,
-        },
-      });
-
-      // Adiciona as mídias
-      if (exampleBoat.media.length > 0) {
-        await tx.media.createMany({
-          data: exampleBoat.media.map((m) => ({
-            url: m.url,
-            type: m.type,
-            boatId: newBoat.id,
-          })),
-        });
-      }
-
-      // Adiciona as amenidades
-      if (exampleBoat.amenities.length > 0) {
-        // Primeiro, cria ou encontra as amenidades
-        for (const amenity of exampleBoat.amenities) {
-          await tx.amenity.upsert({
-            where: {
-              iconName: amenity.icon
-            },
-            create: {
-              name: amenity.name,
-              iconName: amenity.icon,
-            },
-            update: {
-              name: amenity.name,
-            }
-          });
-        }
-
-        // Agora cria as relações com o barco
-        const createdAmenities = await tx.amenity.findMany({
-          where: {
-            iconName: {
-              in: exampleBoat.amenities.map(a => a.icon)
-            }
+          userId: adminUser.id,
+          amenities: {
+            connect: amenities.map(amenity => ({ id: amenity.id }))
+          },
+          media: {
+            create: exampleBoat.media
           }
-        });
-
-        await tx.boatAmenityRelation.createMany({
-          data: createdAmenities.map((amenity) => ({
-            amenityId: amenity.id,
-            boatId: newBoat.id,
-          })),
-        });
-      }
-
-      // Retorna o barco criado com suas relações
-      return tx.boat.findUnique({
-        where: {
-          id: newBoat.id,
         },
         include: {
-          media: true,
           amenities: true,
-        },
+          media: true
+        }
       });
+
+      return newBoat;
     });
 
     console.log('Barco criado com sucesso:', boat);
