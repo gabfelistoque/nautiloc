@@ -12,7 +12,6 @@ async function main() {
   try {
     // Limpa o banco de dados
     await prisma.media.deleteMany();
-    await prisma.boatAmenityRelation.deleteMany();
     await prisma.amenity.deleteMany();
     await prisma.booking.deleteMany();
     await prisma.boat.deleteMany();
