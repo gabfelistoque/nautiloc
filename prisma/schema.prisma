@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -96,6 +96,7 @@ model Media {
   id        String   @id @default(cuid())
   url       String
   type      String   @default("image")
+  publicId  String?
   boatId    String
   boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
