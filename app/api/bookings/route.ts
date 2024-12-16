@@ -75,13 +75,20 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     
-    const { boatId, startDate, endDate, guests, totalPrice } = body;
+    const {
+      boatId,
+      startDate,
+      endDate,
+      totalPrice,
+      status = 'PENDING'
+    } = body;
 
     // Validações básicas
-    if (!boatId || !startDate || !endDate || !guests || totalPrice === undefined) {
-      return NextResponse.json({ 
-        error: 'Todos os campos são obrigatórios' 
-      }, { status: 400 });
+    if (!boatId || !startDate || !endDate || !totalPrice) {
+      return NextResponse.json(
+        { error: 'Campos obrigatórios faltando' },
+        { status: 400 }
+      );
     }
 
     // Converter strings de data para objetos Date
@@ -89,21 +96,18 @@ export async function POST(request: Request) {
     const end = new Date(endDate);
 
     // Validar datas
-    if (end <= start) {
-      return NextResponse.json({
-        error: 'A data de término deve ser posterior à data de início'
-      }, { status: 400 });
+    if (start >= end) {
+      return NextResponse.json(
+        { error: 'Data de início deve ser anterior à data de fim' },
+        { status: 400 }
+      );
     }
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const startDay = new Date(start);
-    startDay.setHours(0, 0, 0, 0);
-
-    if (startDay < now) {
-      return NextResponse.json({
-        error: 'A data de início deve ser futura'
-      }, { status: 400 });
+    if (start < new Date()) {
+      return NextResponse.json(
+        { error: 'Data de início deve ser futura' },
+        { status: 400 }
+      );
     }
 
     // Buscar o barco
@@ -174,11 +178,10 @@ export async function POST(request: Request) {
       data: {
         startDate: start,
         endDate: end,
-        guests: Number(guests),
         totalPrice: calculatedPrice,
         status: 'CONFIRMED',
-        userId: user.id,
-        boatId: boat.id,
+        userId: session.user.id,
+        boatId
       },
       include: {
         boat: {
