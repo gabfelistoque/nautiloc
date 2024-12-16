@@ -12,7 +12,7 @@ interface ExtendedBoat {
   imageUrl: string;
   capacity: number;
   location: string;
-  pricePerDay: number;
+  price: number;
   available: boolean;
   rating: number;
   length: number;
@@ -43,9 +43,9 @@ async function getBoat(id: string): Promise<ExtendedBoat> {
 
   return {
     ...boat,
-    length: 0,
-    year: new Date().getFullYear(),
-    category: 'Default'
+    length: boat.length || 0,
+    year: boat.year || new Date().getFullYear(),
+    category: boat.category || 'Default'
   };
 }
 
@@ -162,14 +162,14 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-2xl font-bold text-blue-600">
-                    R$ {boat.pricePerDay.toLocaleString('pt-BR')}
+                    R$ {boat.price.toLocaleString('pt-BR')}
                   </span>
                   <span className="text-gray-500">por dia</span>
                 </div>
                 <BookingForm 
                   boatId={boat.id} 
                   boatName={boat.name} 
-                  pricePerDay={boat.pricePerDay}
+                  pricePerDay={boat.price}
                 />
               </div>
             </div>
