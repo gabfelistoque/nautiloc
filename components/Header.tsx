@@ -12,16 +12,17 @@ export default function Header() {
   return (
     <header className="fixed w-full top-0 bg-white shadow-md z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-blue-600">
-                nautiloc
-              </Link>
-            </div>
-            
-            {/* Links de navegação baseados no papel do usuário */}
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="text-xl font-bold text-blue-600">
+              nautiloc
+            </Link>
+          </div>
+          
+          {/* Links de navegação centralizados */}
+          <div className="flex-grow flex justify-center">
+            <div className="hidden sm:flex sm:space-x-8">
               {session?.user?.role === 'ADMIN' ? (
                 <>
                   <Link
@@ -92,6 +93,7 @@ export default function Header() {
             </div>
           </div>
 
+          {/* Botões de autenticação */}
           <div className="flex items-center">
             {session ? (
               <div className="flex items-center space-x-4">
