@@ -73,19 +73,19 @@ export async function PUT(
       imageUrl,
       capacity,
       location,
-      pricePerDay,
+      price,
       available,
-      media,
       length,
       year,
       category,
+      media,
       amenities
     } = body;
 
     // Validações básicas
-    if (!name || !description || !capacity || !location || !pricePerDay) {
+    if (!name || !description || !capacity || !location || !price) {
       return NextResponse.json(
-        { error: 'Campos básicos são obrigatórios' },
+        { error: 'Campos obrigatórios faltando' },
         { status: 400 }
       );
     }
@@ -101,14 +101,31 @@ export async function PUT(
           name,
           description,
           imageUrl,
-          capacity,
+          capacity: parseInt(capacity),
           location,
-          pricePerDay,
+          price: parseFloat(price),
           available,
-          length: length || null,
-          year: year || null,
+          length: length ? parseFloat(length) : null,
+          year: year ? parseInt(year) : null,
           category: category || null,
+          ...(amenities && {
+            amenities: {
+              set: [], // Remove todas as amenidades existentes
+              connect: amenities.map((amenity: any) => ({ id: amenity.id })) // Conecta as novas amenidades
+            }
+          })
         },
+        include: {
+          amenities: true,
+          media: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
       });
 
       // Atualiza as mídias
@@ -130,30 +147,8 @@ export async function PUT(
         }
       }
 
-      // Atualiza as amenidades
-      if (amenities) {
-        // Remove todas as amenidades existentes
-        await tx.boatAmenityRelation.deleteMany({
-          where: { boatId: params.id },
-        });
-
-        // Adiciona as novas amenidades
-        await tx.boatAmenityRelation.createMany({
-          data: (amenities as string[]).map((amenityId: string) => ({
-            boatId: params.id,
-            amenityId,
-          })),
-        });
-      }
-
       // Retorna o barco atualizado com suas relações
-      return tx.boat.findUnique({
-        where: { id: params.id },
-        include: {
-          media: true,
-          amenities: true,
-        },
-      });
+      return boat;
     });
 
     return NextResponse.json(updatedBoat);
