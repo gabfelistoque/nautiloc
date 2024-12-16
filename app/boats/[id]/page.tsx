@@ -43,6 +43,7 @@ async function getBoat(id: string): Promise<ExtendedBoat> {
 
   return {
     ...boat,
+    imageUrl: boat.imageUrl || '/placeholder-boat.jpg',
     length: boat.length || 0,
     year: boat.year || new Date().getFullYear(),
     category: boat.category || 'Default'
@@ -169,7 +170,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
                 <BookingForm 
                   boatId={boat.id} 
                   boatName={boat.name} 
-                  pricePerDay={boat.price}
+                  price={boat.price}
                 />
               </div>
             </div>
