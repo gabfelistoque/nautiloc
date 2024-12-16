@@ -129,50 +129,31 @@ export async function PUT(
 
     // Atualiza o barco em uma transação
     const updatedBoat = await prisma.$transaction(async (prisma) => {
-      // Primeiro, remove todas as relações existentes de amenidades
-      await prisma.boatAmenityRelation.deleteMany({
-        where: {
-          boatId: params.id,
-        },
-      });
-
-      // Depois, cria as novas relações
-      const amenityRelations = amenityIds.map((amenityId: string) => ({
-        boatId: params.id,
-        amenityId,
-      }));
-
-      await prisma.boatAmenityRelation.createMany({
-        data: amenityRelations,
-      });
-
-      // Atualiza os dados básicos do barco
-      return prisma.boat.update({
+      // Atualiza o barco com os novos dados e reconecta as amenidades
+      const updatedBoat = await prisma.boat.update({
         where: { id: params.id },
         data: {
           name: data.name,
           description: data.description,
-          imageUrl: data.imageUrl,
-          capacity: data.capacity,
+          price: parseFloat(data.price),
+          capacity: parseInt(data.capacity),
+          length: parseFloat(data.length),
           location: data.location,
-          pricePerDay: data.pricePerDay,
-          available: data.available,
-          length: data.length,
-          year: data.year,
           category: data.category,
-          media: {
-            deleteMany: {},
-            create: data.media.map((media: any) => ({
-              url: media.url,
-              type: media.type,
-            })),
-          },
+          year: parseInt(data.year),
+          available: data.available,
+          amenities: {
+            set: [], // Remove todas as amenidades existentes
+            connect: data.amenities.map((amenity: any) => ({ id: amenity.id })) // Conecta as novas amenidades
+          }
         },
         include: {
           amenities: true,
           media: true,
         },
       });
+
+      return updatedBoat;
     });
 
     console.log('Barco atualizado:', updatedBoat);
