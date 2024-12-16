@@ -142,6 +142,14 @@ export async function PUT(
           category: data.category,
           year: parseInt(data.year),
           available: data.available,
+          media: {
+            deleteMany: {}, // Remove all existing media
+            create: data.media.map((media: any) => ({
+              url: media.url,
+              type: media.type,
+              publicId: media.publicId,
+            })),
+          },
           amenities: {
             set: [], // Remove todas as amenidades existentes
             connect: data.amenities.map((amenity: any) => ({ id: amenity.id })) // Conecta as novas amenidades

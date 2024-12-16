@@ -72,7 +72,19 @@ interface ExtendedBoat {
 async function getBoat(id: string): Promise<ExtendedBoat> {
   const boat = await prisma.boat.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      imageUrl: true,
+      capacity: true,
+      location: true,
+      price: true,
+      available: true,
+      rating: true,
+      length: true,
+      year: true,
+      category: true,
       media: true,
       amenities: {
         select: {

@@ -57,6 +57,8 @@ export async function GET(request: Request) {
       },
     });
     
+    console.log('Barcos encontrados:', boats);
+    
     // Formata os dados antes de enviar
     const formattedBoats = boats.map(boat => ({
       ...boat,
@@ -66,6 +68,8 @@ export async function GET(request: Request) {
         iconName: amenity.iconName,
       })),
     }));
+
+    console.log('Barcos formatados:', formattedBoats);
 
     return NextResponse.json(formattedBoats);
   } catch (error) {

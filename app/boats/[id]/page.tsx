@@ -90,7 +90,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
               <div className="flex items-center gap-4 text-lg">
                 <span className="flex items-center">
                   <span className="text-yellow-400 mr-1">★</span>
-                  {boat.rating.toFixed(1)}
+                  {boat.rating}
                 </span>
                 <span>•</span>
                 <span>{boat.location}</span>
@@ -128,7 +128,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">⭐</span>
-                  <span>Avaliação: {boat.rating.toFixed(1)}</span>
+                  <span>Avaliação: {boat.rating}</span>
                 </div>
               </div>
             </div>

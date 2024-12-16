@@ -25,7 +25,7 @@ export default function BoatCard({
   rating,
 }: BoatCardProps) {
   return (
-    <Link href={`/barcos/${id}`} className="group">
+    <Link href={`/boats/${id}`} className="group">
       <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div className="relative h-48">
           <Image
@@ -42,7 +42,7 @@ export default function BoatCard({
             <h3 className="text-lg font-semibold text-gray-900">{name}</h3>
             <div className="flex items-center text-yellow-500">
               <span className="mr-1">★</span>
-              <span className="text-gray-600">{rating.toFixed(1)}</span>
+              <span className="text-gray-600">{rating}</span>
             </div>
           </div>
           <p className="text-gray-600 text-sm mb-4 line-clamp-2">{description}</p>

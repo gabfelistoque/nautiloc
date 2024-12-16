@@ -19,7 +19,7 @@ export default function BoatsPage() {
   useEffect(() => {
     const fetchBoats = async () => {
       try {
-        const response = await fetch('/api/boats');
+        const response = await fetch('/api/barcos');
         if (!response.ok) {
           throw new Error('Falha ao carregar barcos');
         }
@@ -93,7 +93,7 @@ export default function BoatsPage() {
                   <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full shadow-md">
                     <div className="flex items-center space-x-1">
                       <StarIcon className="w-4 h-4 text-yellow-400" />
-                      <span className="text-sm font-medium">{Number(boat.rating || 0).toFixed(1)}</span>
+                      <span className="text-sm font-medium">{boat.rating}</span>
                     </div>
                   </div>
                   {!boat.available && (

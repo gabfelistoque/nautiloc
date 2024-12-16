@@ -19,13 +19,17 @@ export default function BoatsPage() {
   useEffect(() => {
     const fetchBoats = async () => {
       try {
-        const response = await fetch('/api/boats');
+        console.log('Iniciando busca de barcos...');
+        const response = await fetch('/api/barcos');
+        console.log('Resposta da API:', response.status);
         if (!response.ok) {
           throw new Error('Falha ao carregar barcos');
         }
         const data = await response.json();
+        console.log('Dados recebidos:', data);
         setBoats(data);
       } catch (error) {
+        console.error('Erro detalhado:', error);
         setError(error instanceof Error ? error.message : 'Erro ao carregar barcos');
       } finally {
         setLoading(false);
@@ -93,7 +97,7 @@ export default function BoatsPage() {
                   <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full shadow-md">
                     <div className="flex items-center space-x-1">
                       <StarIcon className="w-4 h-4 text-yellow-400" />
-                      <span className="text-sm font-medium">{boat.rating.toFixed(1)}</span>
+                      <span className="text-sm font-medium">{boat.rating}</span>
                     </div>
                   </div>
                   {!boat.available && (
