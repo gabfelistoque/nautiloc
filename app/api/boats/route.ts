@@ -58,8 +58,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const prisma = new PrismaClient();
+
   try {
     const session = await getServerSession(authOptions);
+    
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Não autorizado' },
@@ -67,110 +70,92 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Dados de exemplo para um novo barco
-    const exampleBoat = {
-      name: "Veleiro Sunset Dream",
-      description: "Veleiro luxuoso perfeito para passeios ao pôr do sol. Equipado com todos os itens de conforto e segurança para uma experiência inesquecível.",
-      imageUrl: "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      capacity: 8,
-      location: "Marina da Glória, Rio de Janeiro",
-      price: 1500,
-      available: true,
-      length: 12.5,
-      year: 2020,
-      category: "Veleiro",
-      amenities: [
-        { name: "Wi-Fi", iconName: "WifiIcon" },
-        { name: "Ar Condicionado", iconName: "SignalIcon" },
-        { name: "Som", iconName: "MusicalNoteIcon" },
-        { name: "Churrasqueira", iconName: "FireIcon" },
-        { name: "Área de Sol", iconName: "SunIcon" }
-      ],
-      media: [
-        {
-          url: "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-          type: "IMAGE"
-        },
-        {
-          url: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-          type: "IMAGE"
-        }
-      ]
-    };
+    if (!session.user.id) {
+      return NextResponse.json(
+        { error: 'ID do usuário não encontrado' },
+        { status: 401 }
+      );
+    }
 
-    // Cria o barco com suas mídias em uma transação
+    const {
+      name,
+      description,
+      imageUrl,
+      capacity,
+      location,
+      price,
+      available,
+      length,
+      year,
+      category,
+      amenities,
+      media
+    } = await request.json();
+
+    // Validações básicas
+    if (!name || !description || !capacity || !location || !price || !length) {
+      return NextResponse.json(
+        { error: 'Campos obrigatórios faltando' },
+        { status: 400 }
+      );
+    }
+
     const boat = await prisma.$transaction(async (tx) => {
-      // Primeiro, cria o barco
+      // Cria o barco com todos os campos necessários
       const newBoat = await tx.boat.create({
         data: {
-          name: exampleBoat.name,
-          description: exampleBoat.description,
-          imageUrl: exampleBoat.imageUrl,
-          capacity: exampleBoat.capacity,
-          location: exampleBoat.location,
-          price: exampleBoat.price,
-          available: exampleBoat.available,
-          length: exampleBoat.length,
-          year: exampleBoat.year,
-          category: exampleBoat.category,
-        },
-      });
-
-      // Adiciona as mídias
-      if (exampleBoat.media.length > 0) {
-        await tx.media.createMany({
-          data: exampleBoat.media.map((m) => ({
-            url: m.url,
-            type: m.type,
-            boatId: newBoat.id,
-          })),
-        });
-      }
-
-      // Adiciona as amenidades
-      if (exampleBoat.amenities.length > 0) {
-        // Primeiro cria as amenidades
-        const amenityPromises = exampleBoat.amenities.map(amenity =>
-          tx.amenity.create({
-            data: {
-              name: amenity.name,
-              iconName: amenity.iconName,
-            },
+          name,
+          description,
+          imageUrl,
+          capacity: parseInt(capacity),
+          location,
+          price: parseFloat(price),
+          length: parseFloat(length),
+          year: year ? parseInt(year) : 2024,
+          category: category || 'Lancha',
+          available: available ?? true,
+          userId: session.user.id,
+          ...(amenities && {
+            amenities: {
+              connect: amenities.map((amenity: any) => ({
+                id: amenity.id
+              }))
+            }
+          }),
+          ...(media?.length > 0 && {
+            media: {
+              create: media.map((m: any, index: number) => ({
+                url: m.url,
+                type: m.type || 'image',
+                order: index
+              }))
+            }
           })
-        );
-        const createdAmenities = await Promise.all(amenityPromises);
-
-        // Depois cria as relações
-        await tx.boatAmenityRelation.createMany({
-          data: createdAmenities.map(amenity => ({
-            boatId: newBoat.id,
-            amenityId: amenity.id,
-          })),
-        });
-      }
-
-      // Retorna o barco criado com suas relações
-      return tx.boat.findUnique({
-        where: {
-          id: newBoat.id,
         },
         include: {
+          amenities: true,
           media: true,
-          amenities: {
-            include: {
-              amenity: true,
-            },
-          },
-        },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
       });
+
+      return newBoat;
     });
 
     return NextResponse.json(boat);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating boat:', error);
     return NextResponse.json(
-      { error: 'Erro ao criar barco' },
+      { error: error.message || 'Erro ao criar barco' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
