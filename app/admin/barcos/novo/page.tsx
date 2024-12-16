@@ -34,7 +34,7 @@ interface NewBoat {
   imageUrl: string;
   capacity: number;
   location: string;
-  pricePerDay: number;
+  price: number;
   available: boolean;
   media: BoatMedia[];
   length: number;
@@ -104,15 +104,15 @@ export default function NewBoatPage() {
     name: '',
     description: '',
     imageUrl: '',
-    capacity: 1,
+    capacity: 0,
     location: '',
-    pricePerDay: 0,
+    price: 0,
     available: true,
     media: [],
     length: 0,
     year: new Date().getFullYear(),
     category: 'Lancha',
-    amenities: [],
+    amenities: []
   });
 
   const handleMainImageUpload = async (file: File) => {
@@ -187,7 +187,7 @@ export default function NewBoatPage() {
         },
         body: JSON.stringify({
           ...formData,
-          pricePerDay: Number(formData.pricePerDay),
+          price: Number(formData.price),
           capacity: Number(formData.capacity),
           length: Number(formData.length),
           year: Number(formData.year),
@@ -273,7 +273,7 @@ export default function NewBoatPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="pricePerDay" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="price" className="block text-sm font-medium text-gray-700">
                       Preço por dia
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
@@ -282,9 +282,9 @@ export default function NewBoatPage() {
                       </div>
                       <input
                         type="number"
-                        name="pricePerDay"
-                        id="pricePerDay"
-                        value={formData.pricePerDay}
+                        name="price"
+                        id="price"
+                        value={formData.price}
                         onChange={handleChange}
                         className="mt-1 p-3 pl-12 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border border-gray-300 rounded-md"
                       />

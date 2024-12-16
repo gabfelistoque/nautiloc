@@ -11,7 +11,7 @@ interface Boat {
   imageUrl: string;
   capacity: number;
   location: string;
-  pricePerDay: number;
+  price: number;
   rating: number;
   available: boolean;
 }
@@ -140,7 +140,7 @@ export default function AdminBoatsPage() {
                           {boat.capacity} pessoas
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          R$ {boat.pricePerDay.toFixed(2)}
+                          R$ {boat.price?.toFixed(2) || '0.00'}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm">
                           <span
