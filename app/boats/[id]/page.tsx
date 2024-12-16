@@ -55,7 +55,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
   
   // Converte a imagem principal e a mídia adicional para o formato da galeria
   const media = [
-    { url: boat.imageUrl, type: 'IMAGE' as const },
+    { url: boat.imageUrl || '/placeholder-boat.jpg', type: 'IMAGE' as const },
     ...boat.media.map(m => ({ 
       url: m.url, 
       type: (m.type === 'IMAGE' || m.type === 'VIDEO' ? m.type : 'IMAGE') as 'IMAGE' | 'VIDEO'
@@ -67,7 +67,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
       {/* Hero Section */}
       <div className="relative h-[60vh]">
         <Image
-          src={boat.imageUrl}
+          src={boat.imageUrl || '/placeholder-boat.jpg'}
           alt={boat.name}
           fill
           style={{ objectFit: 'cover' }}

@@ -86,7 +86,7 @@ export default function BoatsPage() {
                 {/* Imagem Principal */}
                 <div className="relative h-64">
                   <img
-                    src={boat.imageUrl}
+                    src={boat.imageUrl || '/placeholder-boat.jpg'}
                     alt={boat.name}
                     className="w-full h-full object-cover"
                   />
@@ -115,7 +115,7 @@ export default function BoatsPage() {
                         {new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
                           currency: 'BRL'
-                        }).format(boat.pricePerDay)}
+                        }).format(Number(boat.price))}
                       </p>
                       <p className="text-sm text-gray-500">por dia</p>
                     </div>
