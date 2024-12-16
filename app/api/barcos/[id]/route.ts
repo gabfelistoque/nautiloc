@@ -190,14 +190,7 @@ export async function DELETE(
       },
     });
 
-    // Deleta as amenidades
-    await prisma.boatAmenityRelation.deleteMany({
-      where: {
-        boatId: params.id,
-      },
-    });
-
-    // Deleta o barco
+    // Deleta o barco (as relações serão deletadas automaticamente devido ao onDelete: Cascade)
     await prisma.boat.delete({
       where: {
         id: params.id,
