@@ -97,6 +97,7 @@ model Media {
   url       String
   type      String   @default("image")
   publicId  String?
+  order     Int      @default(0)
   boatId    String
   boat      Boat     @relation(fields: [boatId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
