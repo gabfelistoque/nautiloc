@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       imageUrl,
       capacity,
       location,
-      pricePerDay,
+      price,
       available,
       media,
       length,
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       imageUrl,
       capacity: Number(capacity),
       location,
-      pricePerDay: Number(pricePerDay),
+      price: Number(price),
       available,
       length: Number(length),
       year: Number(year),
@@ -123,8 +123,8 @@ export async function POST(request: Request) {
     });
 
     // Validações básicas
-    if (!name || !description || !capacity || !location || !pricePerDay) {
-      console.log('Validation failed:', { name, description, capacity, location, pricePerDay });
+    if (!name || !description || !capacity || !location || !price) {
+      console.log('Validation failed:', { name, description, capacity, location, price });
       return NextResponse.json(
         { error: 'Campos básicos são obrigatórios' },
         { status: 400 }
@@ -190,18 +190,14 @@ export async function POST(request: Request) {
             imageUrl,
             capacity: Number(capacity),
             location,
-            pricePerDay: Number(pricePerDay),
+            price: Number(price),
             available: available ?? true,
             length: Number(length),
             year: Number(year),
             category,
             amenities: {
-              create: processedAmenities.map(amenity => ({
-                amenity: {
-                  connect: {
-                    id: amenity.id
-                  }
-                }
+              connect: processedAmenities.map(amenity => ({
+                id: amenity.id
               }))
             },
             ...(media?.length > 0 && {
@@ -214,16 +210,22 @@ export async function POST(request: Request) {
             })
           },
           include: {
-            amenities: {
-              include: {
-                amenity: true
-              }
-            },
+            amenities: true,
             media: true
           }
         });
 
-        return boat;
+        // Formata a resposta
+        const formattedBoat = {
+          ...boat,
+          amenities: boat.amenities.map(amenity => ({
+            id: amenity.id,
+            name: amenity.name,
+            iconName: amenity.iconName
+          }))
+        };
+
+        return formattedBoat;
       } catch (txError) {
         console.error('Transaction error:', txError);
         throw txError;
