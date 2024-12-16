@@ -47,7 +47,7 @@ interface ExtendedBoat {
   imageUrl: string;
   capacity: number;
   location: string;
-  pricePerDay: number;
+  price: number;
   available: boolean;
   rating: number;
   length: number;
@@ -75,10 +75,12 @@ async function getBoat(id: string): Promise<ExtendedBoat> {
     include: {
       media: true,
       amenities: {
-        include: {
-          amenity: true
+        select: {
+          id: true,
+          name: true,
+          iconName: true
         }
-      },
+      }
     }
   });
 
@@ -89,10 +91,10 @@ async function getBoat(id: string): Promise<ExtendedBoat> {
   // Transforma os dados para o formato esperado
   const transformedBoat = {
     ...boat,
-    amenities: boat.amenities.map(relation => ({
-      id: relation.amenity.id,
-      name: relation.amenity.name,
-      icon: relation.amenity.iconName,
+    amenities: boat.amenities.map(amenity => ({
+      id: amenity.id,
+      name: amenity.name,
+      icon: amenity.iconName,
     }))
   };
 
@@ -166,7 +168,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="mb-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mx-auto text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18m0 0l-4 4m4-4l-4-4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18m0 0l-4 4m4-4l-4 4" />
                     </svg>
                   </div>
                   <p className="text-sm text-gray-500">Comprimento</p>
@@ -267,7 +269,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-[88px]">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-2xl font-bold">R$ {boat.pricePerDay}</p>
+                  <p className="text-2xl font-bold">R$ {boat.price}</p>
                   <p className="text-gray-500">por dia</p>
                 </div>
                 <div className="flex items-center">
@@ -279,7 +281,7 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
               <BookingForm
                 boatId={boat.id}
                 boatName={boat.name}
-                pricePerDay={boat.pricePerDay}
+                price={boat.price}
               />
             </div>
           </div>

@@ -10,7 +10,7 @@ interface BoatCardProps {
   imageUrl: string;
   capacity: number;
   location: string;
-  pricePerDay: number;
+  price: number;
   rating: number;
 }
 
@@ -21,7 +21,7 @@ export default function BoatCard({
   imageUrl,
   capacity,
   location,
-  pricePerDay,
+  price,
   rating,
 }: BoatCardProps) {
   return (
@@ -59,7 +59,7 @@ export default function BoatCard({
           <div className="flex items-center justify-between">
             <div>
               <span className="text-lg font-bold text-blue-600">
-                R$ {pricePerDay.toLocaleString('pt-BR')}
+                R$ {price?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0,00'}
               </span>
               <span className="text-gray-500 text-sm">/dia</span>
             </div>

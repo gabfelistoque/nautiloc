@@ -8,10 +8,10 @@ import "react-datepicker/dist/react-datepicker.css";
 interface BookingFormProps {
   boatId: string;
   boatName: string;
-  pricePerDay: number;
+  price: number;
 }
 
-export default function BookingForm({ boatId, boatName, pricePerDay }: BookingFormProps) {
+export default function BookingForm({ boatId, boatName, price }: BookingFormProps) {
   const { data: session, status } = useSession();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -25,7 +25,7 @@ export default function BookingForm({ boatId, boatName, pricePerDay }: BookingFo
     if (!startDate || !endDate) return 0;
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays * pricePerDay;
+    return diffDays * price;
   };
 
   const handleCalculate = (e: React.FormEvent) => {
@@ -83,10 +83,10 @@ export default function BookingForm({ boatId, boatName, pricePerDay }: BookingFo
       return;
     }
 
-    setIsSubmitting(true);
-    setError(null);
-
     try {
+      setIsSubmitting(true);
+      setError(null);
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
@@ -96,33 +96,29 @@ export default function BookingForm({ boatId, boatName, pricePerDay }: BookingFo
           boatId,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
-          guests: Number(guests),
           totalPrice: calculatedPrice,
+          guests: Number(guests)
         }),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Erro ao processar a reserva');
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar reserva');
+      }
 
       // Limpar o formulário e mostrar sucesso
       setStartDate(null);
       setEndDate(null);
       setGuests(1);
-      setShowConfirmation(false);
       setTotalPrice(0);
+      setShowConfirmation(true);
       
-      alert('Reserva enviada com sucesso! Total: R$ ' + data.totalPrice.toLocaleString('pt-BR'));
-    } catch (error) {
-      console.error('Erro ao enviar reserva:', error);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Erro ao enviar reserva. Por favor, tente novamente.');
-      }
+      // Mostrar mensagem de sucesso
+      alert('Reserva criada com sucesso! Total: R$ ' + data.totalPrice.toLocaleString('pt-BR'));
+    } catch (err: any) {
+      console.error('Erro ao enviar reserva:', err);
+      setError(err.message || 'Erro ao criar reserva');
     } finally {
       setIsSubmitting(false);
     }

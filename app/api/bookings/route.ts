@@ -74,17 +74,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    console.log('Body recebido:', body);
     
     const {
       boatId,
       startDate,
       endDate,
       totalPrice,
-      status = 'PENDING'
+      guests = 1,
     } = body;
 
     // Validações básicas
-    if (!boatId || !startDate || !endDate || !totalPrice) {
+    if (!boatId || !startDate || !endDate || !totalPrice || !guests) {
+      console.log('Campos faltando:', { boatId, startDate, endDate, totalPrice, guests });
       return NextResponse.json(
         { error: 'Campos obrigatórios faltando' },
         { status: 400 }
@@ -112,30 +114,7 @@ export async function POST(request: Request) {
 
     // Buscar o barco
     const boat = await prisma.boat.findUnique({
-      where: { id: boatId },
-      select: {
-        id: true,
-        price: true,
-        available: true,
-        bookings: {
-          where: {
-            OR: [
-              {
-                AND: [
-                  { startDate: { lte: start } },
-                  { endDate: { gt: start } }
-                ]
-              },
-              {
-                AND: [
-                  { startDate: { lt: end } },
-                  { endDate: { gte: end } }
-                ]
-              }
-            ]
-          }
-        }
-      }
+      where: { id: boatId }
     });
 
     if (!boat) {
@@ -152,8 +131,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verificar se há conflito de datas
-    if (boat.bookings.length > 0) {
+    // Verificar conflitos de datas
+    const existingBooking = await prisma.booking.findFirst({
+      where: {
+        boatId,
+        OR: [
+          {
+            AND: [
+              { startDate: { lte: start } },
+              { endDate: { gt: start } }
+            ]
+          },
+          {
+            AND: [
+              { startDate: { lt: end } },
+              { endDate: { gte: end } }
+            ]
+          }
+        ]
+      }
+    });
+
+    if (existingBooking) {
       return NextResponse.json(
         { error: 'Barco já está reservado para este período' },
         { status: 400 }
@@ -179,31 +178,18 @@ export async function POST(request: Request) {
         startDate: start,
         endDate: end,
         totalPrice: calculatedPrice,
-        status: 'CONFIRMED',
-        userId: session.user.id,
+        guests: Number(guests),
+        status: 'PENDENTE',
+        userId: user.id,
         boatId
-      },
-      include: {
-        boat: {
-          include: {
-            media: true
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
       }
     });
 
     return NextResponse.json(booking);
   } catch (error) {
-    console.error('Error creating booking:', error);
+    console.error('Erro geral:', error);
     return NextResponse.json(
-      { error: 'Erro ao criar reserva' },
+      { error: 'Erro ao processar a requisição' },
       { status: 500 }
     );
   }

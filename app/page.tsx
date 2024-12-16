@@ -61,7 +61,7 @@ export default async function Home() {
               imageUrl={boat.imageUrl}
               capacity={boat.capacity}
               location={boat.location}
-              pricePerDay={boat.pricePerDay}
+              price={boat.price}
               rating={boat.rating}
             />
           ))}
