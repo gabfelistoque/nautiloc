@@ -198,10 +198,10 @@ export async function DELETE(
       );
     }
 
-    // Atualizar o status da reserva para CANCELLED
+    // Atualizar o status da reserva para CANCELADO
     const updatedBooking = await prisma.booking.update({
       where: { id: params.id },
-      data: { status: 'CANCELLED' }
+      data: { status: 'CANCELADO' }
     });
 
     return NextResponse.json(updatedBooking);

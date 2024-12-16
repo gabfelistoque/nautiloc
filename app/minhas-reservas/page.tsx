@@ -135,14 +135,14 @@ export default function MinhasReservasPage() {
                     <p>
                       <span className="font-medium">Status:</span>{' '}
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        booking.status === 'CONFIRMED' 
+                        booking.status === 'CONFIRMADO' 
                           ? 'bg-green-100 text-green-800'
-                          : booking.status === 'PENDING'
+                          : booking.status === 'PENDENTE'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {booking.status === 'CONFIRMED' ? 'Confirmada' :
-                         booking.status === 'PENDING' ? 'Pendente' : 'Cancelada'}
+                        {booking.status === 'CONFIRMADO' ? 'Confirmada' :
+                         booking.status === 'PENDENTE' ? 'Pendente' : 'Cancelada'}
                       </span>
                     </p>
                     <p>
@@ -153,7 +153,7 @@ export default function MinhasReservasPage() {
                       }).format(booking.totalPrice)}
                     </p>
                   </div>
-                  {(booking.status === 'CONFIRMED' || booking.status === 'PENDING') && (
+                  {(booking.status === 'CONFIRMADO' || booking.status === 'PENDENTE') && (
                     <button
                       onClick={() => handleCancelBooking(booking.id)}
                       className="mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
