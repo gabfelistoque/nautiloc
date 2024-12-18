@@ -61,15 +61,6 @@ export default function Header() {
 
           {/* Menu do Usuário */}
           <div className="flex items-center">
-            {session?.user?.role === 'ADMIN' && (
-              <Link
-                href="/admin/dashboard"
-                className="hidden md:block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-full mr-2"
-              >
-                Painel Admin
-              </Link>
-            )}
-            
             <div className="relative">
               <button
                 ref={buttonRef}
@@ -94,6 +85,12 @@ export default function Header() {
                       </div>
                       {session.user?.role === 'ADMIN' ? (
                         <>
+                          <Link
+                            href="/admin/dashboard"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Dashboard
+                          </Link>
                           <Link
                             href="/admin/barcos"
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
