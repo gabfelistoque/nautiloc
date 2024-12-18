@@ -74,15 +74,18 @@ export default function Header() {
               <button
                 ref={buttonRef}
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-2 p-2 border border-gray-300 rounded-full hover:shadow-md transition-shadow"
+                className="flex items-center space-x-3 ml-4 px-3 py-1.5 border border-gray-300 rounded-full hover:shadow-md transition-shadow"
               >
+                <UserCircleIcon className="h-6 w-6 text-gray-500" />
                 <Bars3Icon className="h-5 w-5 text-gray-500" />
-                <UserCircleIcon className="h-8 w-8 text-gray-500" />
               </button>
 
               {/* Menu Dropdown */}
               {isUserMenuOpen && (
-                <div ref={menuRef} className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200">
+                <div
+                  ref={menuRef}
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
+                >
                   {session ? (
                     <>
                       <div className="px-4 py-2 border-b border-gray-200">

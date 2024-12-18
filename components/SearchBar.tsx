@@ -91,26 +91,29 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center w-full justify-between px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-full hover:shadow-md transition-shadow"
       >
-        <div className="flex items-center divide-x divide-gray-300">
-          <div className="flex items-center pr-3">
+        <div className="flex-1 flex items-center space-x-3 divide-x divide-gray-300 overflow-x-auto no-scrollbar">
+          <div className="flex items-center shrink-0">
             <MapPinIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span>{location || 'Onde'}</span>
+            <span className="whitespace-nowrap">{location || 'Onde'}</span>
           </div>
-          <div className="flex items-center px-3">
+          <div className="flex items-center pl-3 shrink-0">
             <TagIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span>{category ? formatBoatCategory(category) : 'Tipo de barco'}</span>
+            <span className="whitespace-nowrap">
+              {category ? formatBoatCategory(category) : <span className="hidden md:inline">Tipo de barco</span>}
+              {category ? '' : <span className="md:hidden">Tipo</span>}
+            </span>
           </div>
-          <div className="flex items-center px-3">
+          <div className="flex items-center pl-3 shrink-0">
             <CalendarDaysIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span>{formatDateRange()}</span>
+            <span className="whitespace-nowrap">{formatDateRange()}</span>
           </div>
-          <div className="flex items-center pl-3">
+          <div className="flex items-center pl-3 shrink-0">
             <UsersIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span>{guests} {guests === 1 ? 'convidado' : 'convidados'}</span>
+            <span className="whitespace-nowrap">{guests} {guests === 1 ? 'pessoa' : 'pessoas'}</span>
           </div>
         </div>
-        <div className="bg-blue-600 p-2 ml-3 rounded-full text-white">
-          <MagnifyingGlassIcon className="h-3.5 w-3.5" />
+        <div className="bg-blue-600 p-2 ml-3 rounded-full text-white shrink-0">
+          <MagnifyingGlassIcon className="h-4 w-4" />
         </div>
       </button>
 
@@ -128,7 +131,7 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                   id="location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  className="pl-10 w-full rounded-lg border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-base"
                 >
                   <option value="">Selecione um local</option>
                   {locations.map((loc) => (
