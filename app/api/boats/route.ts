@@ -30,7 +30,12 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(boats);
+      return NextResponse.json(boats, {
+        headers: {
+          'Cache-Control': 'no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        }
+      });
     }
 
     // Para usuários normais, retorna apenas barcos disponíveis
@@ -47,7 +52,12 @@ export async function GET(request: NextRequest) {
       },
     });
     
-    return NextResponse.json(boats);
+    return NextResponse.json(boats, {
+      headers: {
+        'Cache-Control': 'no-store, must-revalidate',
+        'Pragma': 'no-cache',
+      }
+    });
   } catch (error) {
     console.error('Error fetching boats:', error);
     return NextResponse.json(

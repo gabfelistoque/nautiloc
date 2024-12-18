@@ -17,8 +17,11 @@ async function getBoats() {
     orderBy: {
       rating: 'desc',
     },
+    take: 3,
   });
 }
+
+export const revalidate = 0; // Desabilita o cache da página
 
 export default async function Home() {
   const boats = await getBoats();
