@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { UsersIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/solid';
+import { HeartIcon } from '@heroicons/react/24/outline';
 
 interface BoatCardProps {
   id: string;
@@ -29,7 +30,7 @@ export default function BoatCard({
 }: BoatCardProps) {
   return (
     <Link href={`/boats/${id}`} className="group">
-      <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+      <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col w-full">
         <div className="relative h-52">
           <Image
             src={imageUrl}
@@ -44,24 +45,29 @@ export default function BoatCard({
           </div>
         </div>
         <div className="p-5 flex flex-col flex-1">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{name}</h3>
-            <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-              <StarIcon className="w-4 h-4 text-yellow-400" />
-              <span className="text-gray-700 ml-1 text-sm font-medium">{rating}</span>
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <h3 className="text-lg font-semibold flex-shrink">{name}</h3>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                <StarIcon className="w-4 h-4 text-yellow-400" />
+                <span className="text-gray-700 ml-1 text-sm font-medium">{rating}</span>
+              </div>
+              <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
+                <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
+              </button>
             </div>
           </div>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{description}</p>
-          <div className="flex items-center text-gray-500 text-sm space-x-4 mb-4 pb-4 border-b border-gray-100">
-            <span className="flex items-center">
-              <UsersIcon className="w-4 h-4 mr-1.5 text-gray-400" />
-              <span className="font-medium text-gray-600">{capacity} pessoas</span>
+          <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
+            <span className="flex items-center gap-1">
+              <UsersIcon className="w-4 h-4 text-gray-400" />
+              {capacity} pessoas
             </span>
-            <span className="flex items-center">
-              <MapPinIcon className="w-4 h-4 mr-1.5 text-gray-400" />
-              <span className="font-medium text-gray-600">{location}</span>
+            <span className="flex items-center gap-1">
+              <MapPinIcon className="w-4 h-4 text-gray-400" />
+              {location}
             </span>
           </div>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{description}</p>
           <div className="flex items-center justify-between mt-auto">
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-blue-600">

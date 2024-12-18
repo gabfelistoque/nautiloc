@@ -5,6 +5,8 @@ import BoatCard from '@/components/BoatCard';
 import SearchForm from '@/components/SearchForm';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
+import { HeartIcon } from '@heroicons/react/24/outline';
+import { UsersIcon, MapPinIcon } from '@heroicons/react/24/solid';
 
 async function getBoats() {
   return await prisma.boat.findMany({
@@ -57,14 +59,10 @@ export default async function Home() {
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Passeios Imperdíveis</h2>
         <p className="text-gray-600 text-center mb-8 md:mb-12">Explore nossos roteiros exclusivos e viva experiências únicas</p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           {/* Tour Card 1 - Praias Paradisíacas */}
-          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
+          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col w-full">
             <div className="relative h-48">
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
-                <ClockIcon className="w-4 h-4" />
-                6h
-              </div>
               <Image
                 src="https://images.unsplash.com/photo-1468413253725-0d5181091126"
                 alt="Passeio às praias paradisíacas"
@@ -72,14 +70,33 @@ export default async function Home() {
                 style={{ objectFit: 'cover' }}
                 className="transform hover:scale-110 transition-transform duration-500"
               />
+              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
+                <ClockIcon className="w-4 h-4" />
+                6h
+              </div>
             </div>
             <div className="p-6 flex flex-col flex-1">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xl font-semibold mb-0">Praias Paradisíacas</h3>
-                <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                  <StarIcon className="w-4 h-4 text-yellow-400" />
-                  <span className="text-gray-700 ml-1 text-sm font-medium">4.8</span>
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xl font-semibold mb-0 flex-shrink">Praias Paradisíacas</h3>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                    <StarIcon className="w-4 h-4 text-yellow-400" />
+                    <span className="text-gray-700 ml-1 text-sm font-medium">4.8</span>
+                  </div>
+                  <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
+                    <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
+                  </button>
                 </div>
+              </div>
+              <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
+                <span className="flex items-center gap-1">
+                  <UsersIcon className="w-4 h-4 text-gray-400" />
+                  12 pessoas
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPinIcon className="w-4 h-4 text-gray-400" />
+                  Praia do Forte
+                </span>
               </div>
               <p className="text-gray-600 flex-1">Descubra as mais belas praias da região em um passeio inesquecível</p>
               <div className="flex justify-between items-center mt-4">
@@ -94,12 +111,8 @@ export default async function Home() {
           </div>
 
           {/* Tour Card 2 - Pôr do Sol */}
-          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
+          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col w-full">
             <div className="relative h-48">
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
-                <ClockIcon className="w-4 h-4" />
-                2h
-              </div>
               <Image
                 src="https://images.unsplash.com/photo-1572889464105-3d3f39ee2cf7"
                 alt="Passeio ao pôr do sol"
@@ -107,14 +120,33 @@ export default async function Home() {
                 style={{ objectFit: 'cover' }}
                 className="transform hover:scale-110 transition-transform duration-500"
               />
+              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
+                <ClockIcon className="w-4 h-4" />
+                2h
+              </div>
             </div>
             <div className="p-6 flex flex-col flex-1">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xl font-semibold mb-0">Pôr do Sol Romântico</h3>
-                <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                  <StarIcon className="w-4 h-4 text-yellow-400" />
-                  <span className="text-gray-700 ml-1 text-sm font-medium">4.9</span>
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xl font-semibold mb-0 flex-shrink">Pôr do Sol Romântico</h3>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                    <StarIcon className="w-4 h-4 text-yellow-400" />
+                    <span className="text-gray-700 ml-1 text-sm font-medium">4.9</span>
+                  </div>
+                  <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
+                    <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
+                  </button>
                 </div>
+              </div>
+              <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
+                <span className="flex items-center gap-1">
+                  <UsersIcon className="w-4 h-4 text-gray-400" />
+                  8 pessoas
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPinIcon className="w-4 h-4 text-gray-400" />
+                  Marina
+                </span>
               </div>
               <p className="text-gray-600 flex-1">Navegue durante o entardecer em um passeio romântico e relaxante</p>
               <div className="flex justify-between items-center mt-4">
@@ -129,12 +161,8 @@ export default async function Home() {
           </div>
 
           {/* Tour Card 3 - Baleias */}
-          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
+          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col w-full">
             <div className="relative h-48">
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
-                <ClockIcon className="w-4 h-4" />
-                4h
-              </div>
               <Image
                 src="https://images.unsplash.com/photo-1568430462989-44163eb1752f"
                 alt="Avistamento de baleias"
@@ -142,14 +170,33 @@ export default async function Home() {
                 style={{ objectFit: 'cover' }}
                 className="transform hover:scale-110 transition-transform duration-500"
               />
+              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
+                <ClockIcon className="w-4 h-4" />
+                4h
+              </div>
             </div>
             <div className="p-6 flex flex-col flex-1">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xl font-semibold mb-0">Avistamento de Baleias</h3>
-                <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                  <StarIcon className="w-4 h-4 text-yellow-400" />
-                  <span className="text-gray-700 ml-1 text-sm font-medium">4.7</span>
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xl font-semibold mb-0 flex-shrink">Avistamento de Baleias</h3>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                    <StarIcon className="w-4 h-4 text-yellow-400" />
+                    <span className="text-gray-700 ml-1 text-sm font-medium">4.7</span>
+                  </div>
+                  <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
+                    <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
+                  </button>
                 </div>
+              </div>
+              <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
+                <span className="flex items-center gap-1">
+                  <UsersIcon className="w-4 h-4 text-gray-400" />
+                  15 pessoas
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPinIcon className="w-4 h-4 text-gray-400" />
+                  Porto
+                </span>
               </div>
               <p className="text-gray-600 flex-1">Observe as magníficas baleias em seu habitat natural e aprenda sobre seus hábitos</p>
               <div className="flex justify-between items-center mt-4">

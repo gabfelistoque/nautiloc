@@ -119,7 +119,10 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
 
       {/* Painel de Pesquisa Expandido */}
       {isOpen && (
-        <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+        <div 
+          className="absolute top-full left-0 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="space-y-4">
             {/* Campo de Localização */}
             <div className="relative">
@@ -130,7 +133,10 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                 <select
                   id="location"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setLocation(e.target.value);
+                  }}
                   className="pl-10 w-full rounded-lg border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-base"
                 >
                   <option value="">Selecione um local</option>
@@ -155,7 +161,10 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                 <TagIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value as BoatCategory)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setCategory(e.target.value as BoatCategory);
+                  }}
                   className="pl-10 w-full rounded-lg border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
                 >
                   <option value="">Todos os tipos</option>
@@ -174,14 +183,20 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                 Datas
               </label>
               <button
-                onClick={() => setShowDatePicker(!showDatePicker)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDatePicker(!showDatePicker);
+                }}
                 className="relative w-full flex items-center rounded-lg border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <CalendarDaysIcon className="h-5 w-5 text-gray-400 mr-2" />
                 <span>{formatDateRange()}</span>
               </button>
               {showDatePicker && (
-                <div className="absolute z-10 mt-2 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+                <div 
+                  className="absolute z-10 mt-2 bg-white rounded-lg shadow-lg p-4 border border-gray-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <DayPicker
                     mode="range"
                     selected={dateRange}
@@ -204,7 +219,10 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                   type="number"
                   min="1"
                   value={guests}
-                  onChange={(e) => setGuests(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setGuests(Math.max(1, parseInt(e.target.value) || 1));
+                  }}
                   className="pl-10 w-full rounded-lg border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -212,7 +230,10 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
 
             {/* Botão de Pesquisa */}
             <button
-              onClick={handleSearch}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSearch();
+              }}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
               <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
