@@ -9,11 +9,12 @@ interface Boat {
   id: string;
   name: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   capacity: number;
   location: string;
   price: number;
   rating: number;
+  category: string;
 }
 
 export default function ResultsPage() {
@@ -76,6 +77,7 @@ export default function ResultsPage() {
                 location={boat.location}
                 price={boat.price}
                 rating={boat.rating}
+                category={boat.category || 'LANCHA'}
               />
             ))}
           </div>
