@@ -7,6 +7,7 @@ import { ClockIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { UsersIcon, MapPinIcon } from '@heroicons/react/24/solid';
+import Footer from '@/components/Footer';
 
 async function getBoats() {
   return await prisma.boat.findMany({
@@ -287,6 +288,9 @@ export default async function Home() {
           </Link>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }
