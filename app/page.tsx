@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import BoatCard from '@/components/BoatCard';
 import SearchForm from '@/components/SearchForm';
+import { ClockIcon } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
 
 async function getBoats() {
   return await prisma.boat.findMany({
@@ -59,6 +61,10 @@ export default async function Home() {
           {/* Tour Card 1 - Praias Paradisíacas */}
           <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
             <div className="relative h-48">
+              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
+                <ClockIcon className="w-4 h-4" />
+                6h
+              </div>
               <Image
                 src="https://images.unsplash.com/photo-1468413253725-0d5181091126"
                 alt="Passeio às praias paradisíacas"
@@ -66,12 +72,15 @@ export default async function Home() {
                 style={{ objectFit: 'cover' }}
                 className="transform hover:scale-110 transition-transform duration-500"
               />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-                6 horas
-              </div>
             </div>
             <div className="p-6 flex flex-col flex-1">
-              <h3 className="text-xl font-semibold mb-2">Praias Paradisíacas</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-semibold mb-0">Praias Paradisíacas</h3>
+                <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                  <StarIcon className="w-4 h-4 text-yellow-400" />
+                  <span className="text-gray-700 ml-1 text-sm font-medium">4.8</span>
+                </div>
+              </div>
               <p className="text-gray-600 flex-1">Descubra as mais belas praias da região em um passeio inesquecível</p>
               <div className="flex justify-between items-center mt-4">
                 <span className="text-blue-600 font-semibold flex items-center gap-1">
@@ -87,6 +96,10 @@ export default async function Home() {
           {/* Tour Card 2 - Pôr do Sol */}
           <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
             <div className="relative h-48">
+              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
+                <ClockIcon className="w-4 h-4" />
+                2h
+              </div>
               <Image
                 src="https://images.unsplash.com/photo-1572889464105-3d3f39ee2cf7"
                 alt="Passeio ao pôr do sol"
@@ -94,12 +107,15 @@ export default async function Home() {
                 style={{ objectFit: 'cover' }}
                 className="transform hover:scale-110 transition-transform duration-500"
               />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-                2 horas
-              </div>
             </div>
             <div className="p-6 flex flex-col flex-1">
-              <h3 className="text-xl font-semibold mb-2">Pôr do Sol Romântico</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-semibold mb-0">Pôr do Sol Romântico</h3>
+                <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                  <StarIcon className="w-4 h-4 text-yellow-400" />
+                  <span className="text-gray-700 ml-1 text-sm font-medium">4.9</span>
+                </div>
+              </div>
               <p className="text-gray-600 flex-1">Navegue durante o entardecer em um passeio romântico e relaxante</p>
               <div className="flex justify-between items-center mt-4">
                 <span className="text-blue-600 font-semibold flex items-center gap-1">
@@ -115,6 +131,10 @@ export default async function Home() {
           {/* Tour Card 3 - Baleias */}
           <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
             <div className="relative h-48">
+              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
+                <ClockIcon className="w-4 h-4" />
+                4h
+              </div>
               <Image
                 src="https://images.unsplash.com/photo-1568430462989-44163eb1752f"
                 alt="Avistamento de baleias"
@@ -122,12 +142,15 @@ export default async function Home() {
                 style={{ objectFit: 'cover' }}
                 className="transform hover:scale-110 transition-transform duration-500"
               />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-                4 horas
-              </div>
             </div>
             <div className="p-6 flex flex-col flex-1">
-              <h3 className="text-xl font-semibold mb-2">Avistamento de Baleias</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-semibold mb-0">Avistamento de Baleias</h3>
+                <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                  <StarIcon className="w-4 h-4 text-yellow-400" />
+                  <span className="text-gray-700 ml-1 text-sm font-medium">4.7</span>
+                </div>
+              </div>
               <p className="text-gray-600 flex-1">Observe as magníficas baleias em seu habitat natural e aprenda sobre seus hábitos</p>
               <div className="flex justify-between items-center mt-4">
                 <span className="text-blue-600 font-semibold flex items-center gap-1">
