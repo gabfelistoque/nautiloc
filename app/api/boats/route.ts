@@ -73,6 +73,9 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
+    console.log('Session:', session);
+    console.log('User ID:', session?.user?.id);
+    
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Não autorizado' },
@@ -82,8 +85,20 @@ export async function POST(request: NextRequest) {
 
     if (!session.user.id) {
       return NextResponse.json(
-        { error: 'ID do usuário não encontrado' },
+        { error: 'ID do usuário não encontrado na sessão' },
         { status: 401 }
+      );
+    }
+
+    // Verificar se o usuário existe no banco
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+
+    if (!userExists) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado no banco de dados' },
+        { status: 404 }
       );
     }
 
