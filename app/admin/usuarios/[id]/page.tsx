@@ -7,6 +7,7 @@ import { User } from '@prisma/client';
 interface UserFormData {
   name: string;
   email: string;
+  phone: string;
   password?: string;
   role: 'USER' | 'ADMIN';
 }
@@ -17,6 +18,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const [formData, setFormData] = useState<UserFormData>({
     name: '',
     email: '',
+    phone: '',
     password: '',
     role: 'USER',
   });
@@ -51,6 +53,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
           setFormData({
             name: user.name || '',
             email: user.email || '',
+            phone: user.phone || '',
             role: user.role || 'USER',
           });
         } catch (error) {
@@ -142,7 +145,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-900">
           {isNew ? 'Novo Usuário' : 'Editar Usuário'}
@@ -157,14 +160,14 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+      <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl bg-white p-8 rounded-lg shadow">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+          <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-md">
             {error}
           </div>
         )}
 
-        <div>
+        <div className="space-y-2">
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
             Nome
           </label>
@@ -175,11 +178,11 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="block w-full px-6 py-4 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>
 
-        <div>
+        <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email
           </label>
@@ -190,11 +193,27 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="block w-full px-6 py-4 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>
 
-        <div>
+        <div className="space-y-2">
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+            Telefone
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            id="phone"
+            required
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            placeholder="(00) 00000-0000"
+            className="block w-full px-6 py-4 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          />
+        </div>
+
+        <div className="space-y-2">
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Senha {!isNew && '(deixe em branco para manter a atual)'}
           </label>
@@ -205,11 +224,11 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             required={isNew}
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="block w-full px-6 py-4 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>
 
-        <div>
+        <div className="space-y-2">
           <label htmlFor="role" className="block text-sm font-medium text-gray-700">
             Papel
           </label>
@@ -219,25 +238,25 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             required
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value as 'USER' | 'ADMIN' })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="block w-full px-6 py-4 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="USER">Usuário</option>
             <option value="ADMIN">Administrador</option>
           </select>
         </div>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 pt-4">
           <button
             type="button"
             onClick={() => router.back()}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            className="px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            className="px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
             {isSaving ? 'Salvando...' : 'Salvar'}
           </button>
@@ -247,23 +266,23 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       {/* Modal de confirmação de exclusão */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
               Confirmar Exclusão
             </h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 mb-6">
               Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                className="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                className="px-6 py-3 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Confirmar Exclusão
               </button>

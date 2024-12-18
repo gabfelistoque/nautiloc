@@ -24,12 +24,13 @@ export async function GET(
         id: true,
         name: true,
         email: true,
+        phone: true,
         role: true,
         image: true,
         emailVerified: true,
         createdAt: true,
         updatedAt: true,
-      },
+      } as const,
     });
 
     if (!user) {
@@ -58,23 +59,56 @@ export async function PUT(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const data = await request.json();
-    
-    // Se uma nova senha foi fornecida, hash ela
-    if (data.password) {
-      const salt = await bcrypt.genSalt(10);
-      data.password = await bcrypt.hash(data.password, salt);
-    } else {
-      delete data.password; // Se não foi fornecida senha, remover o campo
+    const body = await request.json();
+    const { name, email, phone, role, password } = body;
+
+    // Validar dados obrigatórios
+    if (!name || !email || !role) {
+      return NextResponse.json(
+        { error: 'Dados obrigatórios faltando' },
+        { status: 400 }
+      );
     }
 
-    const user = await prisma.user.update({
+    // Verificar se o email já está em uso por outro usuário
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email,
+        NOT: {
+          id: params.id,
+        },
+      },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email já está em uso' },
+        { status: 400 }
+      );
+    }
+
+    // Preparar dados para atualização
+    const updateData: any = {
+      name,
+      email,
+      phone,
+      role,
+    };
+
+    // Se uma nova senha foi fornecida, hash ela
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    // Atualizar usuário
+    const updatedUser = await prisma.user.update({
       where: { id: params.id },
-      data,
+      data: updateData,
       select: {
         id: true,
         name: true,
         email: true,
+        phone: true,
         role: true,
         image: true,
         emailVerified: true,
@@ -83,7 +117,7 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(user);
+    return NextResponse.json(updatedUser);
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
     return NextResponse.json(
@@ -113,11 +147,12 @@ export async function DELETE(
       );
     }
 
+    // Excluir usuário
     await prisma.user.delete({
       where: { id: params.id },
     });
 
-    return NextResponse.json({ message: 'Usuário excluído com sucesso' });
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error('Erro ao excluir usuário:', error);
     return NextResponse.json(

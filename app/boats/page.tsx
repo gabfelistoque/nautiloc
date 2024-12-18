@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Boat } from '@prisma/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   StarIcon, 
   UsersIcon, 
@@ -15,21 +15,37 @@ export default function BoatsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchBoats = async () => {
       try {
+        setLoading(true);
         console.log('Iniciando busca de barcos...');
-        const response = await fetch('/api/barcos', {
+        console.log('SearchParams:', searchParams.toString());
+        
+        // Construir a URL com os parâmetros de busca
+        const params = new URLSearchParams();
+        for (const [key, value] of searchParams.entries()) {
+          params.append(key, value);
+          console.log(`Adicionando parâmetro: ${key}=${value}`);
+        }
+
+        const url = `/api/barcos?${params.toString()}`;
+        console.log('URL da requisição:', url);
+
+        const response = await fetch(url, {
           cache: 'no-store',
           next: { revalidate: 0 }
         });
         console.log('Resposta da API:', response.status);
+        
         if (!response.ok) {
           throw new Error('Falha ao carregar barcos');
         }
+        
         const data = await response.json();
-        console.log('Dados recebidos:', data);
+        console.log('Dados recebidos:', data.length, 'barcos');
         setBoats(data);
       } catch (error) {
         console.error('Erro detalhado:', error);
@@ -40,7 +56,7 @@ export default function BoatsPage() {
     };
 
     fetchBoats();
-  }, []);
+  }, [searchParams]); // Recarregar quando os parâmetros mudarem
 
   if (loading) {
     return (

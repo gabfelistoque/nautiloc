@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
@@ -8,6 +8,9 @@ const prisma = new PrismaClient();
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    console.log('URL completa:', request.url);
+    console.log('Parâmetros recebidos:', Object.fromEntries(searchParams.entries()));
+
     const isAdmin = searchParams.get('admin') === 'true';
     const session = await getServerSession(authOptions);
 
@@ -30,28 +33,72 @@ export async function GET(request: Request) {
         },
       });
 
-      // Formata os dados antes de enviar
-      const formattedBoats = boats.map(boat => ({
-        ...boat,
-        amenities: boat.amenities.map(amenity => ({
-          id: amenity.id,
-          name: amenity.name,
-          iconName: amenity.iconName,
-        })),
-      }));
-
-      return NextResponse.json(formattedBoats);
+      return NextResponse.json(boats);
     }
 
     // Para usuários normais, retorna apenas barcos disponíveis
     console.log('Buscando barcos disponíveis...');
+    const category = searchParams.get('category')?.toUpperCase();
+    const location = searchParams.get('location');
+    const guests = searchParams.get('guests');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    console.log('Parâmetros processados:', { category, location, guests, startDate, endDate });
+
+    const whereClause: Prisma.BoatWhereInput = {
+      available: true,
+      ...(category && { 
+        category: {
+          equals: category,
+          mode: 'insensitive' as Prisma.QueryMode
+        }
+      }),
+      ...(location && { 
+        location: {
+          contains: location,
+          mode: 'insensitive' as Prisma.QueryMode
+        }
+      }),
+      ...(guests && { capacity: { gte: parseInt(guests) } }),
+      // Verificar se não há reservas no período solicitado
+      ...(startDate && endDate && {
+        NOT: {
+          bookings: {
+            some: {
+              OR: [
+                {
+                  AND: [
+                    { startDate: { lte: new Date(endDate) } },
+                    { endDate: { gte: new Date(startDate) } }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      })
+    };
+
+    console.log('Where clause:', JSON.stringify(whereClause, null, 2));
+
     const boats = await prisma.boat.findMany({
-      where: {
-        available: true,
-      },
+      where: whereClause,
       include: {
         media: true,
         amenities: true,
+        bookings: startDate && endDate ? {
+          where: {
+            OR: [
+              {
+                AND: [
+                  { startDate: { lte: new Date(endDate) } },
+                  { endDate: { gte: new Date(startDate) } }
+                ]
+              }
+            ]
+          }
+        } : false,
       },
       orderBy: {
         rating: 'desc',
@@ -59,13 +106,8 @@ export async function GET(request: Request) {
     });
     
     console.log('Total de barcos encontrados:', boats.length);
-    console.log('Detalhes dos barcos:', boats.map(boat => ({
-      id: boat.id,
-      name: boat.name,
-      available: boat.available,
-      createdAt: boat.createdAt
-    })));
-    
+    console.log('Categorias dos barcos encontrados:', boats.map(boat => boat.category));
+
     // Formata os dados antes de enviar
     const formattedBoats = boats.map(boat => ({
       ...boat,
@@ -80,11 +122,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(formattedBoats);
   } catch (error) {
-    console.error('Error fetching boats:', error);
-    return NextResponse.json(
-      { error: 'Erro ao buscar barcos' },
-      { status: 500 }
-    );
+    console.error('Erro ao buscar barcos:', error);
+    return new NextResponse('Erro Interno', { status: 500 });
   }
 }
 

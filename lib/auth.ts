@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { hash } from "@/app/libs/auth";
 
 const prisma = new PrismaClient();
 
@@ -34,34 +34,27 @@ export const authOptions: NextAuthOptions = {
             }
           });
 
-          console.log("Found user:", user);
-
           if (!user || !user?.password) {
-            console.log("User not found or no password");
             throw new Error("Invalid credentials");
           }
 
-          const isCorrectPassword = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
+          const hashedInputPassword = await hash(credentials.password);
+          const isValid = hashedInputPassword === user.password;
 
-          console.log("Password check:", isCorrectPassword);
-
-          if (!isCorrectPassword) {
-            console.log("Incorrect password");
+          if (!isValid) {
             throw new Error("Invalid credentials");
           }
 
           return {
             id: user.id,
             email: user.email,
-            name: user.name || "",  // Garantindo que name nunca será null
+            name: user.name || "",
+            phone: user.phone || "",
             role: user.role,
           };
         } catch (error) {
-          console.error("Auth error:", error);
-          throw new Error("Invalid credentials");
+          console.log("Error in authorize:", error);
+          return null;
         }
       }
     })
@@ -69,28 +62,24 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        return {
-          ...token,
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        };
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.phone = user.phone;
+        token.role = user.role as string;
       }
       return token;
     },
     async session({ session, token }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id as string,
-          name: token.name as string,
-          email: token.email as string,
-          role: token.role as string,
-        }
-      };
-    },
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.phone = token.phone as string;
+        session.user.role = token.role as string;
+      }
+      return session;
+    }
   },
   debug: process.env.NODE_ENV === "development",
 };

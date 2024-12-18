@@ -1,27 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
-const locations = [
-  'Rio de Janeiro, RJ',
-  'Angra dos Reis, RJ',
-  'Florianópolis, SC',
-  'Salvador, BA',
-  'Fortaleza, CE',
-  'Búzios, RJ',
-  'Paraty, RJ',
-  'Ilhabela, SP'
-];
-
 export default function SearchForm() {
   const router = useRouter();
   const [location, setLocation] = useState('');
+  const [locations, setLocations] = useState<string[]>([]);
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [guests, setGuests] = useState(1);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch('/api/locations');
+        if (!response.ok) {
+          throw new Error('Falha ao carregar locais');
+        }
+        const data = await response.json();
+        setLocations(data);
+      } catch (error) {
+        console.error('Erro ao carregar locais:', error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();

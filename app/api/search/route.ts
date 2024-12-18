@@ -8,6 +8,9 @@ export async function GET(request: Request) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const guests = searchParams.get('guests');
+    const category = searchParams.get('category')?.toUpperCase();
+
+    console.log('Search params:', { location, startDate, endDate, guests, category });
 
     const boats = await prisma.boat.findMany({
       where: {
@@ -15,6 +18,12 @@ export async function GET(request: Request) {
           { available: true },
           location ? { location } : {},
           guests ? { capacity: { gte: parseInt(guests) } } : {},
+          category ? { 
+            category: {
+              equals: category,
+              mode: 'insensitive'
+            }
+          } : {},
           startDate && endDate
             ? {
                 bookings: {
@@ -44,6 +53,7 @@ export async function GET(request: Request) {
     // Remove bookings from response
     const boatsWithoutBookings = boats.map(({ bookings, ...boat }) => boat);
 
+    console.log(`Found ${boatsWithoutBookings.length} boats`);
     return NextResponse.json(boatsWithoutBookings);
   } catch (error) {
     console.error('Search error:', error);
