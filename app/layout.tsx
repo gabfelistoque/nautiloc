@@ -7,7 +7,7 @@ import { NextAuthProvider } from '@/components/providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'BoatRental - Aluguel de Barcos',
+  title: 'Nautiloc - Aluguel de Barcos',
   description: 'Encontre os melhores barcos para alugar',
 };
 
