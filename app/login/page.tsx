@@ -37,7 +37,7 @@ export default function LoginPage() {
       if (role === 'ADMIN') {
         router.push('/admin/dashboard');
       } else {
-        router.push('/');
+        router.push('/minhas-reservas');
       }
       router.refresh();
     } catch (error) {
