@@ -5,7 +5,7 @@ import BoatCard from '@/components/BoatCard';
 import SearchForm from '@/components/SearchForm';
 import CompactWeatherWidget from '@/components/CompactWeatherWidget';
 import TourMap from '@/components/TourMap';
-import { Clock, Users, MapPin, Star, Heart, ArrowRight } from 'lucide-react';
+import { Clock, Users, MapPin, Star, Heart, ArrowRight, Ship } from 'lucide-react';
 import Footer from '@/components/Footer';
 
 async function getBoats() {
@@ -26,12 +26,12 @@ export default async function Home() {
   const boats = await getBoats();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white -mt-16">
       {/* Hero Section */}
-      <div className="hero-section relative h-[108vh] min-h-[800px] flex items-center justify-center text-white overflow-hidden pb-16 md:pb-24">
+      <div className="hero-section relative h-[100vh] min-h-[1150px] max-h-[1050px] md:max-h-none md:min-h-[1000px] flex items-center justify-center text-white overflow-hidden pt-30 md:pt-12">
         <div className="absolute inset-0">
           <video
-            src="https://boatline.com.br/videos/casal-lancha.mp4"
+            src="https://res.cloudinary.com/gaburo/video/upload/v1734630847/fkmfzzfg4esckvefofpt.mp4"
             autoPlay
             muted
             loop
@@ -39,12 +39,13 @@ export default async function Home() {
             className="w-full h-full object-cover brightness-50"
           />
         </div>
-        <div className="relative container mx-auto px-4 pt-20 md:pt-0 z-30">
+        <div className="relative container mx-auto px-4 z-30">
           <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-7xl font-bold mb-4 md:mb-6">
+            <Ship className="w-16 h-16 mx-auto mb-4 text-white" strokeWidth={1.5} />
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 md:mb-6">
               nautiloc
             </h1>
-            <p className="text-lg md:text-2xl text-gray-200">
+            <p className="text-base md:text-2xl text-gray-200 max-w-2xl mx-auto">
               descubra os melhores barcos para sua experiência!
             </p>
           </div>
@@ -63,7 +64,7 @@ export default async function Home() {
       <div className="container mx-auto px-4 mt-16 sm:-mt-8 lg:-mt-24 relative z-20">
         
         {/* Tour Map */}
-        <div>
+        <div className="md:mt-16">
           <TourMap />
         </div>
 
