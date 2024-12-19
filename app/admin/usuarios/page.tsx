@@ -44,7 +44,8 @@ export default function UsersPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Falha ao excluir usuário');
+        const data = await response.json();
+        throw new Error(data.error || 'Falha ao excluir usuário');
       }
 
       setUsers(users.filter(user => user.id !== userId));

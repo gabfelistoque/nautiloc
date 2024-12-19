@@ -147,7 +147,17 @@ export async function DELETE(
       );
     }
 
-    // Excluir usuário
+    // Primeiro, excluir todas as reservas do usuário
+    await prisma.booking.deleteMany({
+      where: { userId: params.id },
+    });
+
+    // Depois, excluir todos os barcos do usuário
+    await prisma.boat.deleteMany({
+      where: { userId: params.id },
+    });
+
+    // Por fim, excluir o usuário
     await prisma.user.delete({
       where: { id: params.id },
     });
