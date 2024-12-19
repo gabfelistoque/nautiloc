@@ -28,7 +28,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white -mt-16">
       {/* Hero Section */}
-      <div className="hero-section relative h-[100vh] min-h-[1150px] max-h-[1050px] md:max-h-none md:min-h-[1000px] flex items-center justify-center text-white overflow-hidden pt-30 md:pt-12">
+      <div className="hero-section relative h-[100vh] min-h-[1025px] max-h-[1025px] md:min-h-[1000px] md:max-h-none flex items-center justify-center text-white overflow-hidden pt-14 md:pt-0">
         <div className="absolute inset-0">
           <video
             src="https://res.cloudinary.com/gaburo/video/upload/v1734630847/fkmfzzfg4esckvefofpt.mp4"
@@ -61,14 +61,14 @@ export default async function Home() {
       </div>
 
       {/* Tours Section */}
-      <div className="container mx-auto px-4 mt-16 sm:-mt-8 lg:-mt-24 relative z-20">
+      <div className="container mx-auto px-4 mt-8 sm:mt-0 lg:-mt-16 relative z-20">
         
         {/* Tour Map */}
-        <div className="md:mt-16">
+        <div className="mt-20 md:mt-24 lg:mt-24">
           <TourMap />
         </div>
 
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2 mt-16">Passeios Imperdíveis</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2 mt-12 sm:mt-16">Passeios Imperdíveis</h2>
         <p className="text-center text-gray-600 mb-8">Explore nossos passeios exclusivos</p>
         
         {/* Tour Cards */}
