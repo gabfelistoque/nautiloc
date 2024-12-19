@@ -7,8 +7,8 @@ import { NextAuthProvider } from '@/components/providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Nautiloc - Aluguel de Barcos',
-  description: 'Encontre os melhores barcos para alugar',
+  title: 'Nautiloc',
+  description: 'Aluguel de barcos em Ilhabela',
 };
 
 export default function RootLayout({
@@ -21,9 +21,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <NextAuthProvider>
           <Header />
-          <div className="pt-16">
-            {children}
-          </div>
+          <main className="min-h-screen">
+            <div className="pt-16">
+              {children}
+            </div>
+          </main>
         </NextAuthProvider>
       </body>
     </html>

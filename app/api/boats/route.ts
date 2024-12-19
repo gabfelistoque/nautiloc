@@ -125,9 +125,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const boat = await prisma.$transaction(async (tx) => {
-      // Cria o barco com todos os campos necessários
-      const newBoat = await tx.boat.create({
+    try {
+      // Primeiro, vamos criar o barco base
+      const boat = await prisma.boat.create({
         data: {
           name,
           description,
@@ -140,47 +140,71 @@ export async function POST(request: NextRequest) {
           category: category || 'Lancha',
           available: available ?? true,
           userId: session.user.id,
-          ...(amenities && {
-            amenities: {
-              connect: amenities.map((amenity: any) => ({
-                id: amenity.id
-              }))
-            }
-          }),
-          ...(media?.length > 0 && {
-            media: {
-              create: media.map((m: any, index: number) => ({
-                url: m.url,
-                type: m.type || 'image',
-                order: index
-              }))
-            }
-          })
-        },
-        include: {
-          amenities: true,
-          media: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
         }
       });
 
-      return newBoat;
-    });
+      // Depois, em uma transação separada, adicionamos as relações
+      const updatedBoat = await prisma.$transaction(async (tx) => {
+        // Conecta amenities se existirem
+        if (amenities?.length > 0) {
+          await tx.boat.update({
+            where: { id: boat.id },
+            data: {
+              amenities: {
+                connect: amenities.map((amenity: any) => ({
+                  id: amenity.id
+                }))
+              }
+            }
+          });
+        }
 
-    return NextResponse.json(boat);
+        // Adiciona media se existir
+        if (media?.length > 0) {
+          await tx.media.createMany({
+            data: media.map((m: any, index: number) => ({
+              url: m.url,
+              type: m.type || 'image',
+              order: index,
+              boatId: boat.id
+            }))
+          });
+        }
+
+        // Retorna o barco atualizado com todas as relações
+        return await tx.boat.findUnique({
+          where: { id: boat.id },
+          include: {
+            amenities: true,
+            media: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        });
+      }, {
+        timeout: 15000 // 15 segundos de timeout
+      });
+
+      return NextResponse.json(updatedBoat);
+    } catch (error: any) {
+      console.error('Error creating boat:', error);
+      return NextResponse.json(
+        { error: error.message || 'Erro ao criar barco' },
+        { status: 500 }
+      );
+    } finally {
+      await prisma.$disconnect();
+    }
   } catch (error: any) {
     console.error('Error creating boat:', error);
     return NextResponse.json(
       { error: error.message || 'Erro ao criar barco' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

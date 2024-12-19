@@ -290,23 +290,14 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
   };
 
   const handleMediaDelete = async (media: Media) => {
-    if (!media.id) {
-      setError('ID da mídia não encontrado');
-      return;
-    }
-
     try {
-      console.log('Tentando deletar mídia:', media);
-      const response = await fetch(`/api/barcos/${params.id}/media`, {
+      console.log('Removendo mídia:', media);
+      const response = await fetch(`/api/barcos/${params.id}/media?mediaId=${media.id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ mediaId: media.id }),
       });
 
       console.log('Status da resposta:', response.status);
-      const responseData = await response.json();
+      const responseData = await response.text();
       console.log('Dados da resposta:', responseData);
 
       if (!response.ok) {
@@ -318,7 +309,7 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
           }));
           return;
         }
-        throw new Error(responseData.error || 'Erro ao remover mídia');
+        throw new Error(responseData || 'Erro ao remover mídia');
       }
 
       // Atualiza o estado local removendo a mídia

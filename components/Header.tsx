@@ -87,7 +87,7 @@ export default function Header() {
                         <>
                           <Link
                             href="/admin/dashboard"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -95,7 +95,7 @@ export default function Header() {
                           </Link>
                           <Link
                             href="/admin/barcos"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <Ship className="h-4 w-4 mr-2" />
@@ -103,7 +103,7 @@ export default function Header() {
                           </Link>
                           <Link
                             href="/admin/reservas"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <Calendar className="h-4 w-4 mr-2" />
@@ -111,7 +111,7 @@ export default function Header() {
                           </Link>
                           <Link
                             href="/admin/usuarios"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <Users className="h-4 w-4 mr-2" />
@@ -122,7 +122,7 @@ export default function Header() {
                         <>
                           <Link
                             href="/minhas-reservas"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <Calendar className="h-4 w-4 mr-2" />
@@ -130,7 +130,7 @@ export default function Header() {
                           </Link>
                           <Link
                             href="/favoritos"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <Heart className="h-4 w-4 mr-2" />
@@ -143,7 +143,7 @@ export default function Header() {
                           setIsUserMenuOpen(false);
                           signOut();
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                       >
                         <LogOut className="h-4 w-4 mr-2" />
                         Sair
@@ -153,14 +153,14 @@ export default function Header() {
                     <>
                       <Link
                         href="/login"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                       >
                         <LogIn className="h-4 w-4 mr-2" />
                         Entrar
                       </Link>
                       <Link
                         href="/registrar"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Registrar

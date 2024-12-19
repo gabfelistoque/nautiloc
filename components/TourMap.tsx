@@ -32,7 +32,9 @@ export default function TourMap() {
         if (!container) return;
 
         // Cria o mapa
-        mapRef.current = L.map(container).setView([-23.82, -45.42], 11);
+        mapRef.current = L.map(container, {
+          scrollWheelZoom: false,
+        }).setView([-23.82, -45.42], 11);
         
         // Adiciona o layer do OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -64,7 +66,7 @@ export default function TourMap() {
   if (!isClient) return null;
 
   return (
-    <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-lg">
+    <div className="relative h-[500px] w-full -mt-32 z-0 rounded-xl overflow-hidden shadow-lg">
       <div id="map-container" className="h-full w-full" />
     </div>
   );
