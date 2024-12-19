@@ -151,10 +151,16 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
       }
 
       const data = await response.json();
-      setFormData((prev) => ({
-        ...prev,
-        imageUrl: data.secure_url,
-      }));
+      console.log('Nova imageUrl:', data.secure_url); // Log da nova URL
+      
+      setFormData((prev) => {
+        const updated = {
+          ...prev,
+          imageUrl: data.secure_url,
+        };
+        console.log('FormData atualizado:', updated); // Log do formData atualizado
+        return updated;
+      });
     } catch (error) {
       console.error('Error uploading image:', error);
       setError('Erro ao fazer upload da imagem. Por favor, tente novamente.');
@@ -196,6 +202,7 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
     try {
       console.log('Enviando dados:', {
         ...formData,
+        imageUrl: formData.imageUrl, // Garante que a imageUrl seja enviada
         pricePerDay: Number(formData.pricePerDay),
         capacity: Number(formData.capacity),
         length: Number(formData.length),
@@ -213,6 +220,7 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
         },
         body: JSON.stringify({
           ...formData,
+          imageUrl: formData.imageUrl, // Garante que a imageUrl seja enviada
           pricePerDay: Number(formData.pricePerDay),
           capacity: Number(formData.capacity),
           length: Number(formData.length),
@@ -609,8 +617,8 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
                     src={formData.imageUrl}
                     alt="Imagem principal"
                     fill
-                    className="rounded-lg object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover rounded-lg"
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
                     <p className="text-white text-sm">Clique para trocar a imagem</p>

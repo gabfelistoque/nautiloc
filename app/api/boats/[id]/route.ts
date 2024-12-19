@@ -61,10 +61,12 @@ export async function PUT(
     }
 
     const data = await request.json();
+    console.log('Dados recebidos:', data); 
+    console.log('ImageUrl recebida:', data.imageUrl); 
+
     const {
       name,
       description,
-      imageUrl,
       capacity,
       location,
       price,
@@ -85,29 +87,42 @@ export async function PUT(
     }
 
     const updatedBoat = await prisma.$transaction(async (tx) => {
+      // Primeiro, busca o barco atual
+      const currentBoat = await tx.boat.findUnique({
+        where: { id: params.id },
+        include: {
+          amenities: true,
+          media: true
+        }
+      });
+
+      if (!currentBoat) {
+        throw new Error('Barco não encontrado');
+      }
+
       // Atualiza o barco com todos os campos necessários
       const boat = await tx.boat.update({
         where: { id: params.id },
         data: {
           name,
           description,
-          imageUrl,
-          capacity: parseInt(capacity),
+          imageUrl: data.imageUrl, 
+          capacity: parseInt(capacity.toString()),
           location,
-          price: parseFloat(price),
-          length: parseFloat(length),
-          year: year ? parseInt(year) : 2024,
+          price: parseFloat(price.toString()),
+          length: parseFloat(length.toString()),
+          year: year ? parseInt(year.toString()) : 2024,
           category: category || 'Lancha',
           available: available ?? true,
           ...(amenities && {
             amenities: {
-              set: [], // Remove todas as amenidades existentes
+              set: [], 
               connect: amenities.map((amenity: any) => ({ id: amenity.id }))
             }
           }),
           ...(media && {
             media: {
-              deleteMany: {}, // Remove todas as mídias existentes
+              deleteMany: {}, 
               create: media.map((m: any, index: number) => ({
                 url: m.url,
                 type: m.type || 'image',

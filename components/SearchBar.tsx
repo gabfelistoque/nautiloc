@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { CalendarDaysIcon, MapPinIcon, UsersIcon, TagIcon } from '@heroicons/react/24/outline';
+import { Ship, MapPin, Calendar, Users, Search } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -93,27 +92,27 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
       >
         <div className="flex-1 flex items-center space-x-3 divide-x divide-gray-300 overflow-x-auto no-scrollbar">
           <div className="flex items-center shrink-0">
-            <MapPinIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+            <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
             <span className="whitespace-nowrap">{location || 'Onde'}</span>
           </div>
           <div className="flex items-center pl-3 shrink-0">
-            <TagIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+            <Ship className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
             <span className="whitespace-nowrap">
               {category ? formatBoatCategory(category) : <span className="hidden md:inline">Tipo de barco</span>}
               {category ? '' : <span className="md:hidden">Tipo</span>}
             </span>
           </div>
           <div className="flex items-center pl-3 shrink-0">
-            <CalendarDaysIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+            <Calendar className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
             <span className="whitespace-nowrap">{formatDateRange()}</span>
           </div>
           <div className="flex items-center pl-3 shrink-0">
-            <UsersIcon className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+            <Users className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
             <span className="whitespace-nowrap">{guests} {guests === 1 ? 'pessoa' : 'pessoas'}</span>
           </div>
         </div>
         <div className="bg-blue-600 p-2 ml-3 rounded-full text-white shrink-0">
-          <MagnifyingGlassIcon className="h-4 w-4" />
+          <Search className="h-4 w-4" />
         </div>
       </button>
 
@@ -147,7 +146,7 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                   ))}
                 </select>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPinIcon className="h-5 w-5 text-gray-400" />
+                  <MapPin className="h-5 w-5 text-gray-400" />
                 </div>
               </div>
             </div>
@@ -158,7 +157,7 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                 Tipo de Barco
               </label>
               <div className="relative">
-                <TagIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Ship className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <select
                   value={category}
                   onChange={(e) => {
@@ -189,7 +188,7 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                 }}
                 className="relative w-full flex items-center rounded-lg border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <CalendarDaysIcon className="h-5 w-5 text-gray-400 mr-2" />
+                <Calendar className="h-5 w-5 text-gray-400 mr-2" />
                 <span>{formatDateRange()}</span>
               </button>
               {showDatePicker && (
@@ -214,7 +213,7 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
                 Convidados
               </label>
               <div className="relative">
-                <UsersIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="number"
                   min="1"
@@ -236,7 +235,7 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
               }}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
-              <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
+              <Search className="h-5 w-5 mr-2" />
               Pesquisar
             </button>
           </div>

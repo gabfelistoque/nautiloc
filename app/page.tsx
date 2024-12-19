@@ -3,10 +3,10 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import BoatCard from '@/components/BoatCard';
 import SearchForm from '@/components/SearchForm';
-import { ClockIcon } from '@heroicons/react/24/outline';
-import { StarIcon } from '@heroicons/react/24/solid';
-import { HeartIcon } from '@heroicons/react/24/outline';
-import { UsersIcon, MapPinIcon } from '@heroicons/react/24/solid';
+import WeatherWidget from '@/components/WeatherWidget';
+import TourMap from '@/components/TourMap';
+import TourCard from '@/components/TourCard';
+import { Clock, Users, MapPin, Star, Heart, ArrowRight } from 'lucide-react';
 import Footer from '@/components/Footer';
 
 async function getBoats() {
@@ -58,161 +58,53 @@ export default async function Home() {
         </div>
       </div>
 
+      {/* Weather Widget */}
+      <div className="container mx-auto px-4 -mt-20 relative z-20">
+        <WeatherWidget />
+      </div>
+
       {/* Tours Section */}
       <div className="container mx-auto px-4 py-8 md:py-16">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Passeios Imperdíveis</h2>
-        <p className="text-gray-600 text-center mb-8 md:mb-12">Explore nossos roteiros exclusivos e viva experiências únicas</p>
+        <p className="text-center text-gray-600 mb-8">Explore nossos passeios exclusivos</p>
         
+        {/* Tour Map */}
+        <div className="mb-8">
+          <TourMap />
+        </div>
+
+        {/* Tour Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          {/* Tour Card 1 - Praias Paradisíacas */}
-          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col w-full">
-            <div className="relative h-48">
-              <Image
-                src="https://images.unsplash.com/photo-1468413253725-0d5181091126"
-                alt="Passeio às praias paradisíacas"
-                fill
-                style={{ objectFit: 'cover' }}
-                className="transform hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
-                <ClockIcon className="w-4 h-4" />
-                6h
-              </div>
-            </div>
-            <div className="p-6 flex flex-col flex-1">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xl font-semibold mb-0 flex-shrink">Praias Paradisíacas</h3>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                    <StarIcon className="w-4 h-4 text-yellow-400" />
-                    <span className="text-gray-700 ml-1 text-sm font-medium">4.8</span>
-                  </div>
-                  <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
-                    <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
-                <span className="flex items-center gap-1">
-                  <UsersIcon className="w-4 h-4 text-gray-400" />
-                  12 pessoas
-                </span>
-                <span className="flex items-center gap-1">
-                  <MapPinIcon className="w-4 h-4 text-gray-400" />
-                  Praia do Forte
-                </span>
-              </div>
-              <p className="text-gray-600 flex-1">Descubra as mais belas praias da região em um passeio inesquecível</p>
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-blue-600 font-semibold flex items-center gap-1">
-                  A partir de R$ 600
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tour Card 2 - Pôr do Sol */}
-          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col w-full">
-            <div className="relative h-48">
-              <Image
-                src="https://images.unsplash.com/photo-1572889464105-3d3f39ee2cf7"
-                alt="Passeio ao pôr do sol"
-                fill
-                style={{ objectFit: 'cover' }}
-                className="transform hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
-                <ClockIcon className="w-4 h-4" />
-                2h
-              </div>
-            </div>
-            <div className="p-6 flex flex-col flex-1">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xl font-semibold mb-0 flex-shrink">Pôr do Sol Romântico</h3>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                    <StarIcon className="w-4 h-4 text-yellow-400" />
-                    <span className="text-gray-700 ml-1 text-sm font-medium">4.9</span>
-                  </div>
-                  <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
-                    <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
-                <span className="flex items-center gap-1">
-                  <UsersIcon className="w-4 h-4 text-gray-400" />
-                  8 pessoas
-                </span>
-                <span className="flex items-center gap-1">
-                  <MapPinIcon className="w-4 h-4 text-gray-400" />
-                  Marina
-                </span>
-              </div>
-              <p className="text-gray-600 flex-1">Navegue durante o entardecer em um passeio romântico e relaxante</p>
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-blue-600 font-semibold flex items-center gap-1">
-                  A partir de R$ 350
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tour Card 3 - Baleias */}
-          <div className="rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col w-full">
-            <div className="relative h-48">
-              <Image
-                src="https://images.unsplash.com/photo-1568430462989-44163eb1752f"
-                alt="Avistamento de baleias"
-                fill
-                style={{ objectFit: 'cover' }}
-                className="transform hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1.5 shadow-lg z-10">
-                <ClockIcon className="w-4 h-4" />
-                4h
-              </div>
-            </div>
-            <div className="p-6 flex flex-col flex-1">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xl font-semibold mb-0 flex-shrink">Avistamento de Baleias</h3>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                    <StarIcon className="w-4 h-4 text-yellow-400" />
-                    <span className="text-gray-700 ml-1 text-sm font-medium">4.7</span>
-                  </div>
-                  <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
-                    <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
-                <span className="flex items-center gap-1">
-                  <UsersIcon className="w-4 h-4 text-gray-400" />
-                  15 pessoas
-                </span>
-                <span className="flex items-center gap-1">
-                  <MapPinIcon className="w-4 h-4 text-gray-400" />
-                  Porto
-                </span>
-              </div>
-              <p className="text-gray-600 flex-1">Observe as magníficas baleias em seu habitat natural e aprenda sobre seus hábitos</p>
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-blue-600 font-semibold flex items-center gap-1">
-                  A partir de R$ 800
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </div>
+          <TourCard
+            title="Praias Paradisíacas"
+            duration="6h"
+            rating={4.8}
+            capacity={12}
+            location="Praia do Forte"
+            description="Descubra as mais belas praias da região em um passeio inesquecível"
+            price={600}
+            imageUrl="https://images.unsplash.com/photo-1468413253725-0d5181091126"
+          />
+          <TourCard
+            title="Pôr do Sol Romântico"
+            duration="2h"
+            rating={4.9}
+            capacity={8}
+            location="Marina"
+            description="Navegue durante o entardecer em um passeio romântico e relaxante"
+            price={350}
+            imageUrl="https://images.unsplash.com/photo-1572889464105-3d3f39ee2cf7"
+          />
+          <TourCard
+            title="Avistamento de Baleias"
+            duration="4h"
+            rating={4.7}
+            capacity={10}
+            location="Alto Mar"
+            description="Observe as magníficas baleias em seu habitat natural e aprenda sobre seus hábitos"
+            price={800}
+            imageUrl="https://images.unsplash.com/photo-1568430462989-44163eb1752f"
+          />
         </div>
 
         <div className="text-center mt-12">

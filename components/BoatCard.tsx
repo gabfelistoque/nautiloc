@@ -2,8 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { UsersIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/solid';
-import { HeartIcon } from '@heroicons/react/24/outline';
+import { Users, MapPin, Star, Heart } from 'lucide-react';
 
 interface BoatCardProps {
   id: string;
@@ -49,25 +48,25 @@ export default function BoatCard({
             <h3 className="text-lg font-semibold flex-shrink">{name}</h3>
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                <StarIcon className="w-4 h-4 text-yellow-400" />
+                <Star className="w-4 h-4 text-yellow-400" strokeWidth={1.5} fill="currentColor" />
                 <span className="text-gray-700 ml-1 text-sm font-medium">{rating}</span>
               </div>
               <button className="p-1.5 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
-                <HeartIcon className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" />
+                <Heart className="w-5 h-5 text-red-400 hover:text-red-500 transition-colors" strokeWidth={1.5} />
               </button>
             </div>
           </div>
           <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
             <span className="flex items-center gap-1">
-              <UsersIcon className="w-4 h-4 text-gray-400" />
+              <Users className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
               {capacity} pessoas
             </span>
             <span className="flex items-center gap-1">
-              <MapPinIcon className="w-4 h-4 text-gray-400" />
+              <MapPin className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
               {location}
             </span>
           </div>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{description}</p>
+          <p className="text-gray-600 text-sm mb-6 line-clamp-2 flex-1">{description}</p>
           <div className="flex items-center justify-between mt-auto">
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-blue-600">

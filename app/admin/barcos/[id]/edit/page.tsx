@@ -194,8 +194,10 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
     setError('');
 
     try {
+      console.log('Estado do formData antes de enviar:', formData);
       const formattedData = {
         ...formData,
+        imageUrl: formData.imageUrl, // Garantir que a imageUrl seja incluída
         price: Number(formData.price),
         capacity: Number(formData.capacity),
         length: Number(formData.length),

@@ -218,3 +218,33 @@ body {
 .card-shadow:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
+
+/* Estilos do Leaflet */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.custom-div-icon {
+  background: none;
+  border: none;
+}
+
+/* Animação para os marcadores */
+.custom-div-icon div {
+  transition: transform 0.2s;
+}
+
+.custom-div-icon div:hover {
+  transform: scale(1.1);
+}
+
+/* Estilo para os popups */
+.leaflet-popup-content-wrapper {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+}
