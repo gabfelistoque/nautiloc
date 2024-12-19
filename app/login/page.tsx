@@ -12,8 +12,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setIsLoading(true);
     setError('');
 
@@ -29,8 +29,16 @@ export default function LoginPage() {
         return;
       }
 
-      // Redirecionar com base no papel do usuário
-      router.push('/');
+      // Buscar o papel do usuário
+      const response = await fetch('/api/user/role');
+      const { role } = await response.json();
+      
+      // Redirecionar com base no papel
+      if (role === 'ADMIN') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/');
+      }
       router.refresh();
     } catch (error) {
       setError('Ocorreu um erro ao fazer login');

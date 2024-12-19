@@ -76,134 +76,113 @@ export default function Header() {
           {/* Menu do Usuário */}
           <div className="flex items-center">
             <div className="relative">
-              {session ? (
-                <>
-                  <button
-                    ref={buttonRef}
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 ml-4 px-3 py-1.5 border border-gray-300 rounded-full hover:shadow-md transition-shadow bg-white/80 backdrop-blur-sm"
-                  >
-                    <UserCircle className="h-5 w-5 text-gray-400" strokeWidth={1.5} />
-                    <Menu className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
-                  </button>
+              <button
+                ref={buttonRef}
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-2 ml-4 px-3 py-1.5 border border-gray-300 rounded-full hover:shadow-md transition-shadow bg-white/80 backdrop-blur-sm"
+              >
+                <UserCircle className="h-5 w-5 text-gray-400" strokeWidth={1.5} />
+                <Menu className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
+              </button>
 
-                  {/* Menu Dropdown */}
-                  {isUserMenuOpen && (
-                    <div
-                      ref={menuRef}
-                      className="absolute right-0 mt-2 w-48 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg py-2 z-50"
-                    >
-                      {session ? (
+              {/* Menu Dropdown */}
+              {isUserMenuOpen && (
+                <div
+                  ref={menuRef}
+                  className="absolute right-0 mt-2 w-48 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg py-2 z-50"
+                >
+                  {session ? (
+                    <>
+                      <div className="px-4 py-2 border-b border-gray-200">
+                        <p className="text-sm font-medium text-gray-900">{session.user?.name}</p>
+                        <p className="text-sm text-gray-500">{session.user?.email}</p>
+                      </div>
+                      {session.user?.role === 'ADMIN' ? (
                         <>
-                          <div className="px-4 py-2 border-b border-gray-200">
-                            <p className="text-sm font-medium text-gray-900">{session.user?.name}</p>
-                            <p className="text-sm text-gray-500">{session.user?.email}</p>
-                          </div>
-                          {session.user?.role === 'ADMIN' ? (
-                            <>
-                              <Link
-                                href="/admin/dashboard"
-                                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <LayoutDashboard className="h-4 w-4 mr-2" />
-                                Dashboard
-                              </Link>
-                              <Link
-                                href="/admin/barcos"
-                                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <Ship className="h-4 w-4 mr-2" />
-                                Gerenciar Barcos
-                              </Link>
-                              <Link
-                                href="/admin/reservas"
-                                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Gerenciar Reservas
-                              </Link>
-                              <Link
-                                href="/admin/usuarios"
-                                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <Users className="h-4 w-4 mr-2" />
-                                Gerenciar Usuários
-                              </Link>
-                            </>
-                          ) : (
-                            <>
-                              <Link
-                                href="/minhas-reservas"
-                                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Minhas Reservas
-                              </Link>
-                              <Link
-                                href="/favoritos"
-                                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <Heart className="h-4 w-4 mr-2" />
-                                Favoritos
-                              </Link>
-                            </>
-                          )}
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              signOut();
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                          <Link
+                            href="/admin/dashboard"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Sair
-                          </button>
+                            <LayoutDashboard className="h-4 w-4 mr-2" />
+                            Dashboard
+                          </Link>
+                          <Link
+                            href="/admin/barcos"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Ship className="h-4 w-4 mr-2" />
+                            Gerenciar Barcos
+                          </Link>
+                          <Link
+                            href="/admin/reservas"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Gerenciar Reservas
+                          </Link>
+                          <Link
+                            href="/admin/usuarios"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Users className="h-4 w-4 mr-2" />
+                            Gerenciar Usuários
+                          </Link>
                         </>
                       ) : (
                         <>
                           <Link
-                            href="/login"
-                            className={`transition-colors duration-300 ${
-                              pathname === '/' ? (isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white hover:text-blue-200') : 'text-gray-700 hover:text-blue-600'
-                            }`}
+                            href="/minhas-reservas"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <LogIn className="h-4 w-4 mr-2" />
-                            Entrar
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Minhas Reservas
                           </Link>
                           <Link
-                            href="/registrar"
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                            href="/favoritos"
+                            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Registrar
+                            <Heart className="h-4 w-4 mr-2" />
+                            Favoritos
                           </Link>
                         </>
                       )}
-                    </div>
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          signOut();
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sair
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Login
+                      </Link>
+                      <Link
+                        href="/registrar"
+                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Registrar
+                      </Link>
+                    </>
                   )}
-                </>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href="/login"
-                    className={`transition-colors duration-300 ${
-                      pathname === '/' ? (isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white hover:text-blue-200') : 'text-gray-700 hover:text-blue-600'
-                    }`}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/registrar"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Registrar
-                  </Link>
                 </div>
               )}
             </div>
