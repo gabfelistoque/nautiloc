@@ -66,8 +66,6 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
   }, []);
 
   const handleSearch = () => {
-    console.log('Enviando busca com categoria:', category);
-    
     // Criar uma nova URLSearchParams para manter os parâmetros existentes
     const params = new URLSearchParams();
     
@@ -79,8 +77,6 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
     if (dateRange?.to) params.set('endDate', dateRange.to.toISOString());
 
     const url = `/resultados?${params.toString()}`;
-    console.log('URL de busca construída:', url);
-    
     router.push(url);
     setIsOpen(false);
   };
