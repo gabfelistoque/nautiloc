@@ -126,6 +126,7 @@ export default function AdminBoatsPage() {
                               src={boat.imageUrl}
                               alt={boat.name}
                               fill
+                              sizes="40px"
                               className="rounded-full object-cover"
                             />
                           </div>

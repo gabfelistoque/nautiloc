@@ -169,7 +169,11 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json(booking);
+    return NextResponse.json(booking, {
+      headers: {
+        'redirect-url': '/minhas-reservas?success=true'
+      }
+    });
   } catch (error) {
     console.error('Erro geral:', error);
     return NextResponse.json(

@@ -9,6 +9,14 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Nautiloc',
   description: 'Aluguel de barcos em Ilhabela',
+  icons: {
+    icon: [
+      {
+        url: '/favicon.svg',
+        type: 'image/svg+xml',
+      }
+    ]
+  },
 };
 
 export default function RootLayout({

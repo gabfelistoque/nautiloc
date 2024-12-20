@@ -136,7 +136,7 @@ export default function ImageCarousel({
               loadedImages.has(currentIndex) ? 'opacity-100' : 'opacity-0'
             }`}
             priority={currentIndex === 0}
-            onLoadingComplete={() => {
+            onLoad={() => {
               setLoadedImages(prev => new Set([...prev, currentIndex]));
               setIsLoading(false);
             }}
