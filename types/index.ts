@@ -6,6 +6,5 @@ export type UserWithoutPassword = Omit<User, 'password'> & {
 };
 
 export interface ExtendedUser extends User {
-  image?: string | null;
   phone?: string | null;
 }
