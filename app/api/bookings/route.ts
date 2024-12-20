@@ -85,10 +85,18 @@ export async function POST(request: Request) {
     } = body;
 
     // Validações básicas
-    if (!boatId || !startDate || !endDate || !totalPrice || !guests) {
+    if (!boatId || !startDate || !endDate || guests < 1) {
       console.log('Campos faltando:', { boatId, startDate, endDate, totalPrice, guests });
       return NextResponse.json(
         { error: 'Campos obrigatórios faltando' },
+        { status: 400 }
+      );
+    }
+
+    // Validar preço total
+    if (typeof totalPrice !== 'number' || totalPrice <= 0) {
+      return NextResponse.json(
+        { error: 'Preço total inválido' },
         { status: 400 }
       );
     }
@@ -97,22 +105,15 @@ export async function POST(request: Request) {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Validar datas
-    if (start >= end) {
+    // Se as datas forem iguais, não precisa verificar se a data final é maior
+    if (start.getTime() !== end.getTime() && end <= start) {
       return NextResponse.json(
-        { error: 'Data de início deve ser anterior à data de fim' },
+        { error: 'A data de término deve ser posterior à data de início' },
         { status: 400 }
       );
     }
 
-    if (start < new Date()) {
-      return NextResponse.json(
-        { error: 'Data de início deve ser futura' },
-        { status: 400 }
-      );
-    }
-
-    // Buscar o barco
+    // Buscar o barco para validar o preço
     const boat = await prisma.boat.findUnique({
       where: { id: boatId }
     });
@@ -124,48 +125,21 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!boat.available) {
-      return NextResponse.json(
-        { error: 'Barco não está disponível' },
-        { status: 400 }
-      );
+    // Calcular o número de dias
+    let days = 1;
+    if (start.getTime() !== end.getTime()) {
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    // Verificar conflitos de datas
-    const existingBooking = await prisma.booking.findFirst({
-      where: {
-        boatId,
-        OR: [
-          {
-            AND: [
-              { startDate: { lte: start } },
-              { endDate: { gt: start } }
-            ]
-          },
-          {
-            AND: [
-              { startDate: { lt: end } },
-              { endDate: { gte: end } }
-            ]
-          }
-        ]
-      }
-    });
+    // Calcular preço esperado
+    const subtotal = days * boat.price;
+    const serviceFee = subtotal * 0.1; // 10% de taxa de serviço
+    const expectedTotalPrice = subtotal + serviceFee;
 
-    if (existingBooking) {
-      return NextResponse.json(
-        { error: 'Barco já está reservado para este período' },
-        { status: 400 }
-      );
-    }
-
-    // Calcular preço total
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const calculatedPrice = diffDays * boat.price;
-
-    // Verificar se o preço calculado corresponde ao preço enviado
-    if (Math.abs(calculatedPrice - totalPrice) > 0.01) {
+    // Verificar se o preço total está correto (com margem de erro de R$1 para arredondamentos)
+    if (Math.abs(totalPrice - expectedTotalPrice) > 1) {
+      console.log('Preço inválido:', { totalPrice, expectedTotalPrice });
       return NextResponse.json(
         { error: 'Preço total inválido' },
         { status: 400 }
@@ -177,11 +151,21 @@ export async function POST(request: Request) {
       data: {
         startDate: start,
         endDate: end,
-        totalPrice: calculatedPrice,
-        guests: Number(guests),
-        status: 'PENDENTE',
+        totalPrice,
+        guests,
         userId: user.id,
-        boatId
+        boatId,
+        status: 'PENDENTE'
+      },
+      include: {
+        boat: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       }
     });
 

@@ -70,7 +70,7 @@ export default function SearchForm() {
         </div>
 
         {/* Check-in */}
-        <div className="space-y-2">
+        <div className="space-y-2 relative">
           <label className="block text-sm font-medium text-gray-700">
             Data de Início
           </label>
@@ -81,11 +81,21 @@ export default function SearchForm() {
             placeholderText="Selecione a data"
             minDate={new Date()}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+            popperClassName="z-[1000]"
+            popperPlacement="bottom-start"
+            popperModifiers={[
+              {
+                name: "preventOverflow",
+                options: {
+                  padding: 8
+                }
+              }
+            ]}
           />
         </div>
 
         {/* Check-out */}
-        <div className="space-y-2">
+        <div className="space-y-2 relative">
           <label className="block text-sm font-medium text-gray-700">
             Data de Fim
           </label>
@@ -96,6 +106,16 @@ export default function SearchForm() {
             placeholderText="Selecione a data"
             minDate={checkIn || new Date()}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+            popperClassName="z-[1000]"
+            popperPlacement="bottom-start"
+            popperModifiers={[
+              {
+                name: "preventOverflow",
+                options: {
+                  padding: 8
+                }
+              }
+            ]}
           />
         </div>
 

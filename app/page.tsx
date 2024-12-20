@@ -13,6 +13,9 @@ async function getBoats() {
     where: {
       available: true,
     },
+    include: {
+      media: true,
+    },
     orderBy: {
       rating: 'desc',
     },
@@ -237,6 +240,7 @@ export default async function Home() {
               name={boat.name}
               description={boat.description}
               imageUrl={boat.imageUrl || undefined}
+              media={boat.media}
               capacity={boat.capacity}
               location={boat.location}
               price={boat.price}

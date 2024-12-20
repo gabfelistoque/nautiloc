@@ -64,21 +64,18 @@ model VerificationToken {
 
 model Boat {
   id          String    @id @default(cuid())
-  name        String    @unique
+  name        String
   description String
   imageUrl    String?
-  price       Float
+  media       Media[]  // Adicionado relacionamento com mídia
   capacity    Int
-  length      Float
   location    String
-  category    String    @default("Lancha")
-  year        Int       @default(2024)
-  available   Boolean   @default(true)
-  rating      Float     @default(0)
+  price       Float
+  rating      Float    @default(0)
+  category    String
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   amenities   Amenity[]
-  media       Media[]
   bookings    Booking[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -96,11 +93,9 @@ model Amenity {
 model Media {
   id        String   @id @default(cuid())
   url       String
-  type      String   @default("image")
-  publicId  String?
-  order     Int      @default(0)
-  boatId    String
+  type      String   // "IMAGE" ou "VIDEO"
   boat      Boat     @relation(fields: [boatId], references: [id])
+  boatId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

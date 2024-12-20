@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import DatePicker from 'react-datepicker';
+import { CalendarDays, CalendarRange } from 'lucide-react';
 import "react-datepicker/dist/react-datepicker.css";
 
 interface BookingFormProps {
@@ -15,39 +16,64 @@ export default function BookingForm({ boatId, boatName, price }: BookingFormProp
   const { data: session, status } = useSession();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [isMultipleDays, setIsMultipleDays] = useState(false);
   const [guests, setGuests] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [previewCalculation, setPreviewCalculation] = useState<{
+    days: number;
+    subtotal: number;
+    cleaningFee: number;
+    total: number;
+  } | null>(null);
 
   const calculateTotalPrice = () => {
-    if (!startDate || !endDate) return 0;
+    if (!startDate) return 0;
+    
+    // Se for apenas um dia ou se não tiver data de término
+    if (!isMultipleDays || !endDate) {
+      const subtotal = price;
+      const cleaningFee = subtotal * 0.1;
+      return subtotal + cleaningFee;
+    }
+
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays * price;
+    const subtotal = diffDays * price;
+    const cleaningFee = subtotal * 0.1;
+    return subtotal + cleaningFee;
   };
 
-  const handleCalculate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session) {
-      setError("Por favor, faça login para fazer uma reserva");
-      return;
+  useEffect(() => {
+    if (startDate) {
+      let days = 1;
+      if (isMultipleDays && endDate) {
+        const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+        days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+      
+      const subtotal = days * price;
+      const cleaningFee = subtotal * 0.1;
+      
+      setPreviewCalculation({
+        days,
+        subtotal,
+        cleaningFee,
+        total: subtotal + cleaningFee
+      });
+    } else {
+      setPreviewCalculation(null);
     }
-    
-    if (!startDate || !endDate) {
-      setError("Por favor, selecione as datas de início e término");
-      return;
+  }, [startDate, endDate, isMultipleDays, price]);
+
+  // Quando desativa múltiplos dias, limpa a data de término
+  useEffect(() => {
+    if (!isMultipleDays) {
+      setEndDate(null);
     }
-    if (endDate <= startDate) {
-      setError("A data de término deve ser posterior à data de início");
-      return;
-    }
-    const price = calculateTotalPrice();
-    setTotalPrice(price);
-    setShowConfirmation(true);
-    setError(null);
-  };
+  }, [isMultipleDays]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,39 +81,40 @@ export default function BookingForm({ boatId, boatName, price }: BookingFormProp
       setError("Por favor, faça login para fazer uma reserva");
       return;
     }
-
-    if (!startDate || !endDate) {
-      setError("Por favor, selecione as datas de início e término");
+    
+    if (!startDate) {
+      setError("Por favor, selecione a data de início");
       return;
     }
 
-    if (endDate <= startDate) {
-      setError("A data de término deve ser posterior à data de início");
-      return;
-    }
+    if (isMultipleDays) {
+      if (!endDate) {
+        setError("Por favor, selecione a data de término");
+        return;
+      }
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-
-    if (start < now) {
-      setError("A data de início deve ser futura");
-      return;
-    }
-
-    // Calcula o preço total novamente para garantir consistência
-    const calculatedPrice = calculateTotalPrice();
-    if (calculatedPrice <= 0) {
-      setError("Erro ao calcular o preço total");
-      return;
+      if (endDate <= startDate) {
+        setError("A data de término deve ser posterior à data de início");
+        return;
+      }
     }
 
     try {
       setIsSubmitting(true);
       setError(null);
+      setSuccess(null);
 
-      const response = await fetch('/api/bookings', {
+      // Se for apenas um dia, usa a mesma data para início e fim
+      // Sabemos que startDate não é null neste ponto
+      const effectiveEndDate = (isMultipleDays ? endDate : startDate) as Date;
+      
+      // Se não tiver data de término quando necessário, retorna
+      if (isMultipleDays && !endDate) {
+        setError("Por favor, selecione a data de término");
+        return;
+      }
+
+      const response = await fetch('/api/bookings/check-availability', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,52 +122,96 @@ export default function BookingForm({ boatId, boatName, price }: BookingFormProp
         body: JSON.stringify({
           boatId,
           startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          totalPrice: calculatedPrice,
+          endDate: effectiveEndDate.toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erro ao verificar disponibilidade');
+      }
+
+      const bookingResponse = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          boatId,
+          startDate: startDate.toISOString(),
+          endDate: effectiveEndDate.toISOString(),
+          totalPrice: calculateTotalPrice(),
           guests: Number(guests)
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar reserva');
+      if (!bookingResponse.ok) {
+        const data = await bookingResponse.json();
+        throw new Error(data.error || 'Erro ao processar reserva');
       }
 
-      // Limpar o formulário e mostrar sucesso
       setStartDate(null);
       setEndDate(null);
       setGuests(1);
       setTotalPrice(0);
-      setShowConfirmation(true);
-      
-      // Mostrar mensagem de sucesso
-      alert('Reserva criada com sucesso! Total: R$ ' + data.totalPrice.toLocaleString('pt-BR'));
-    } catch (err: any) {
-      console.error('Erro ao enviar reserva:', err);
-      setError(err.message || 'Erro ao criar reserva');
+      setError(null);
+      setSuccess('Reserva realizada com sucesso! Você receberá um e-mail com mais detalhes.');
+    } catch (err) {
+      console.error('Erro:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao processar reserva');
+      setSuccess(null);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={showConfirmation ? handleSubmit : handleCalculate} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
           {error}
         </div>
       )}
 
-      <div className="space-y-2">
+      {success && (
+        <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
+          {success}
+        </div>
+      )}
+      
+      <div className="space-y-3">
+        <div className="flex w-full bg-gray-50 rounded-xl p-1">
+          <button
+            type="button"
+            onClick={() => setIsMultipleDays(false)}
+            className={`flex-1 py-2.5 text-sm font-medium transition-all duration-200 ${
+              !isMultipleDays
+                ? 'bg-white text-blue-600 rounded-lg shadow-sm ring-1 ring-gray-200'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Um dia
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsMultipleDays(true)}
+            className={`flex-1 py-2.5 text-sm font-medium transition-all duration-200 ${
+              isMultipleDays
+                ? 'bg-white text-blue-600 rounded-lg shadow-sm ring-1 ring-gray-200'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Mais de um dia
+          </button>
+        </div>
+
         <label className="block text-sm font-medium text-gray-700">
-          Data de início
+          Quando
         </label>
         <DatePicker
           selected={startDate}
           onChange={(date) => {
             setStartDate(date);
-            setShowConfirmation(false);
             setTotalPrice(0);
           }}
           selectsStart
@@ -154,27 +225,28 @@ export default function BookingForm({ boatId, boatName, price }: BookingFormProp
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Data de término
-        </label>
-        <DatePicker
-          selected={endDate}
-          onChange={(date) => {
-            setEndDate(date);
-            setShowConfirmation(false);
-            setTotalPrice(0);
-          }}
-          selectsEnd
-          startDate={startDate}
-          endDate={endDate}
-          minDate={startDate || new Date()}
-          dateFormat="dd/MM/yyyy"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholderText="Selecione a data"
-          required
-        />
-      </div>
+      {isMultipleDays && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Data de término
+          </label>
+          <DatePicker
+            selected={endDate}
+            onChange={(date) => {
+              setEndDate(date);
+              setTotalPrice(0);
+            }}
+            selectsEnd
+            startDate={startDate}
+            endDate={endDate}
+            minDate={startDate || new Date()}
+            dateFormat="dd/MM/yyyy"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholderText="Selecione a data"
+            required={isMultipleDays}
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
@@ -186,7 +258,6 @@ export default function BookingForm({ boatId, boatName, price }: BookingFormProp
           value={guests}
           onChange={(e) => {
             setGuests(Number(e.target.value));
-            setShowConfirmation(false);
             setTotalPrice(0);
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -194,34 +265,36 @@ export default function BookingForm({ boatId, boatName, price }: BookingFormProp
         />
       </div>
 
-      {showConfirmation && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Resumo da reserva</h3>
-          <div className="space-y-2 text-sm text-blue-800">
-            <p>Período: {startDate?.toLocaleDateString('pt-BR')} a {endDate?.toLocaleDateString('pt-BR')}</p>
-            <p>Convidados: {guests} pessoas</p>
-            <p className="text-lg font-bold">Total: R$ {totalPrice.toLocaleString('pt-BR')}</p>
-          </div>
-        </div>
-      )}
-
       <button
         type="submit"
         disabled={isSubmitting}
         className={`w-full py-3 px-4 rounded-md text-white font-medium ${
           isSubmitting
             ? 'bg-gray-400 cursor-not-allowed'
-            : showConfirmation
-            ? 'bg-green-600 hover:bg-green-700'
             : 'bg-blue-600 hover:bg-blue-700'
         } transition-colors`}
       >
-        {isSubmitting
-          ? 'Processando...'
-          : showConfirmation
-          ? 'Confirmar Reserva'
-          : 'Calcular Total'}
+        {isSubmitting ? 'Processando...' : 'Reservar'}
       </button>
+
+      <p className="text-gray-500 text-xs mt-2 text-center">Você ainda não será cobrado. O pagamento será processado após a confirmação de nossa plataforma.</p>
+
+      {previewCalculation && (
+        <div className="mt-6 space-y-2.5">
+          <div className="flex justify-between text-gray-600 text-sm">
+            <span>R$ {price.toLocaleString('pt-BR')} x {previewCalculation.days} {previewCalculation.days === 1 ? 'dia' : 'dias'}</span>
+            <span>R$ {previewCalculation.subtotal.toLocaleString('pt-BR')}</span>
+          </div>
+          <div className="flex justify-between text-gray-600 text-sm">
+            <span>Taxa de limpeza</span>
+            <span>R$ {previewCalculation.cleaningFee.toLocaleString('pt-BR')}</span>
+          </div>
+          <div className="flex justify-between font-semibold text-gray-900 border-t pt-3 text-sm">
+            <span>Total</span>
+            <span>R$ {previewCalculation.total.toLocaleString('pt-BR')}</span>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
