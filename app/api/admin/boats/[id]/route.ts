@@ -68,14 +68,20 @@ export async function PATCH(
       return new NextResponse("Boat not found", { status: 404 });
     }
 
-    // Se o nome foi alterado, verificar se já existe outro barco com esse nome
+    // Verifica se já existe um barco com o mesmo nome
     if (name && name !== existingBoat.name) {
-      const boatWithSameName = await prisma.boat.findUnique({
-        where: { name },
+      const boatWithSameName = await prisma.boat.findFirst({
+        where: { 
+          name,
+          id: { not: params.id } // Exclui o barco atual da busca
+        },
       });
 
       if (boatWithSameName) {
-        return new NextResponse("Boat with this name already exists", { status: 400 });
+        return NextResponse.json(
+          { error: 'Já existe um barco com este nome' },
+          { status: 400 }
+        );
       }
     }
 
