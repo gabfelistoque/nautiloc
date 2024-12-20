@@ -70,7 +70,7 @@ export async function PATCH(
 
     // Se o nome foi alterado, verificar se já existe outro barco com esse nome
     if (name && name !== existingBoat.name) {
-      const boatWithSameName = await prisma.boat.findUnique({
+      const boatWithSameName = await prisma.boat.findFirst({
         where: { name },
       });
 
