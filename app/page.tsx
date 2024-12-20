@@ -54,11 +54,15 @@ export default async function Home() {
           </div>
 
           {/* Search Form */}
-          <div className="search-container max-w-4xl mx-auto bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl">
-            <SearchForm />
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl">
+              <SearchForm />
+            </div>
           </div>
-          <div className="mt-4">
-            <CompactWeatherWidget />
+          <div className="mt-4 max-w-4xl mx-auto">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl">
+              <CompactWeatherWidget />
+            </div>
           </div>
         </div>
       </div>

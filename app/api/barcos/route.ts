@@ -49,36 +49,36 @@ export async function GET(request: Request) {
     const whereClause: Prisma.BoatWhereInput = {
       available: true,
       ...(category && { 
-        category: {
-          equals: category,
-          mode: 'insensitive' as Prisma.QueryMode
-        }
+        category: category as Prisma.BoatScalarFieldEnum
       }),
-      ...(location && { 
+      ...(location && {
         location: {
           contains: location,
-          mode: 'insensitive' as Prisma.QueryMode
+          mode: 'insensitive'
         }
       }),
-      ...(guests && { capacity: { gte: parseInt(guests) } }),
-      // Verificar se não há reservas no período solicitado
-      ...(startDate && endDate && {
-        NOT: {
-          bookings: {
-            some: {
-              OR: [
-                {
-                  AND: [
-                    { startDate: { lte: new Date(endDate) } },
-                    { endDate: { gte: new Date(startDate) } }
-                  ]
-                }
+      ...(guests && {
+        capacity: {
+          gte: parseInt(guests)
+        }
+      }),
+    };
+
+    // Se tiver datas, verifica disponibilidade
+    if (startDate && endDate) {
+      whereClause.bookings = {
+        none: {
+          OR: [
+            {
+              AND: [
+                { startDate: { lte: new Date(endDate) } },
+                { endDate: { gte: new Date(startDate) } }
               ]
             }
-          }
+          ]
         }
-      })
-    };
+      };
+    }
 
     console.log('Where clause:', JSON.stringify(whereClause, null, 2));
 
@@ -87,43 +87,26 @@ export async function GET(request: Request) {
       include: {
         media: true,
         amenities: true,
-        bookings: startDate && endDate ? {
-          where: {
-            OR: [
-              {
-                AND: [
-                  { startDate: { lte: new Date(endDate) } },
-                  { endDate: { gte: new Date(startDate) } }
-                ]
-              }
-            ]
-          }
-        } : false,
       },
-      orderBy: {
-        rating: 'desc',
-      },
+      orderBy: [
+        {
+          rating: 'desc'
+        },
+        {
+          price: 'asc'
+        }
+      ],
     });
-    
-    console.log('Total de barcos encontrados:', boats.length);
-    console.log('Categorias dos barcos encontrados:', boats.map(boat => boat.category));
 
-    // Formata os dados antes de enviar
-    const formattedBoats = boats.map(boat => ({
-      ...boat,
-      amenities: boat.amenities.map(amenity => ({
-        id: amenity.id,
-        name: amenity.name,
-        iconName: amenity.iconName,
-      })),
-    }));
+    console.log(`Encontrados ${boats.length} barcos`);
+    return NextResponse.json(boats);
 
-    console.log('Barcos formatados:', formattedBoats);
-
-    return NextResponse.json(formattedBoats);
   } catch (error) {
     console.error('Erro ao buscar barcos:', error);
-    return new NextResponse('Erro Interno', { status: 500 });
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
   }
 }
 
@@ -223,7 +206,7 @@ export async function POST(request: Request) {
             if (!existingAmenity && amenity.iconName) {
               existingAmenity = await tx.amenity.upsert({
                 where: { iconName: amenity.iconName },
-                update: {},
+                update: {} ,
                 create: {
                   name: amenity.name,
                   iconName: amenity.iconName,

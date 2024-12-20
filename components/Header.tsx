@@ -61,7 +61,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Principal */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between py-2.5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between md:w-auto">
             {/* Logo */}
             <Link href="/" className="flex-shrink-0">
               <span className={`text-xl font-bold transition-colors duration-300 ${
@@ -69,7 +69,7 @@ export default function Header() {
               }`}>nautiloc</span>
             </Link>
 
-            {/* Menu do Usuário */}
+            {/* Menu do Usuário Mobile */}
             <div className="flex items-center md:hidden">
               <div className="relative">
                 <button
@@ -185,14 +185,14 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Barra de Pesquisa */}
-          <div ref={searchRef} className="mt-2 md:mt-0 md:flex-1 md:mx-4">
-            <div className="bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-shadow">
+          {/* SearchBar */}
+          <div className="w-full md:flex-1 md:flex md:justify-center md:max-w-lg mx-auto mt-2 md:mt-0">
+            <div className="w-full md:w-auto md:min-w-[400px]">
               <SearchBar isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} />
             </div>
           </div>
 
-          {/* Menu do Usuário Desktop */}
+          {/* Menu Desktop */}
           <div className="hidden md:flex items-center">
             <div className="relative">
               <button

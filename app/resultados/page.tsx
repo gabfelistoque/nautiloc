@@ -10,6 +10,7 @@ interface Boat {
   name: string;
   description: string;
   imageUrl?: string;
+  media?: { url: string; type: string }[];
   capacity: number;
   location: string;
   price: number;
@@ -51,13 +52,25 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="bg-blue-600 py-8">
-        <div className="container mx-auto px-4">
-          <SearchForm />
+      <div className="hidden md:block relative overflow-hidden">
+        <div className="absolute inset-0">
+          <video
+            src="https://res.cloudinary.com/gaburo/video/upload/v1734630847/fkmfzzfg4esckvefofpt.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover brightness-50"
+          />
+        </div>
+        <div className="relative bg-blue-600/0 py-8">
+          <div className="container mx-auto px-4">
+            <SearchForm />
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-20 md:pt-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
             {boats.length} {boats.length === 1 ? 'barco encontrado' : 'barcos encontrados'}
@@ -72,7 +85,8 @@ export default function ResultsPage() {
                 id={boat.id}
                 name={boat.name}
                 description={boat.description}
-                imageUrl={boat.imageUrl || undefined}
+                imageUrl={boat.imageUrl}
+                media={boat.media}
                 capacity={boat.capacity}
                 location={boat.location}
                 price={boat.price}

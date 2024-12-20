@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Ship, MapPin, Calendar, Users, Search } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
@@ -26,12 +26,27 @@ type SearchBarProps = {
 
 export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
   const router = useRouter();
+  const searchBarRef = useRef<HTMLDivElement>(null);
   const [location, setLocation] = useState('');
   const [locations, setLocations] = useState<string[]>([]);
   const [guests, setGuests] = useState(1);
   const [category, setCategory] = useState<BoatCategory | ''>('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setShowDatePicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [setIsOpen]);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -84,37 +99,55 @@ export default function SearchBar({ isOpen, setIsOpen }: SearchBarProps) {
   };
 
   return (
-    <div className="relative">
+    <div ref={searchBarRef} className="relative">
       {/* Botão de Pesquisa Colapsado */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center w-full justify-between px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-full hover:shadow-md transition-shadow"
+        className="flex items-center w-full justify-between px-4 py-2 text-sm text-gray-600 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-full hover:shadow-md transition-shadow"
       >
-        <div className="flex-1 flex items-center space-x-3 divide-x divide-gray-300 overflow-x-auto no-scrollbar">
-          <div className="flex items-center shrink-0">
-            <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span className="whitespace-nowrap">{location || 'Onde'}</span>
-          </div>
-          <div className="flex items-center pl-3 shrink-0">
-            <Ship className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span className="whitespace-nowrap">
-              {category ? formatBoatCategory(category) : <span className="hidden md:inline">Tipo de barco</span>}
-              {category ? '' : <span className="md:hidden">Tipo</span>}
-            </span>
-          </div>
-          <div className="flex items-center pl-3 shrink-0">
-            <Calendar className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span className="whitespace-nowrap">{formatDateRange()}</span>
-          </div>
-          <div className="flex items-center pl-3 shrink-0">
-            <Users className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-            <span className="whitespace-nowrap">{guests} {guests === 1 ? 'pessoa' : 'pessoas'}</span>
+        <div className="flex-1 overflow-x-auto no-scrollbar">
+          <div className="flex items-center space-x-3 divide-x divide-gray-300 min-w-max pr-3">
+            <div className="flex items-center shrink-0">
+              <MapPin className="h-4 w-4 mr-1.5 text-gray-500" />
+              <span className="whitespace-nowrap">{location || 'Onde'}</span>
+            </div>
+            <div className="flex items-center pl-3 shrink-0">
+              <Ship className="h-4 w-4 mr-1.5 text-gray-500" />
+              <span className="whitespace-nowrap">
+                {category ? formatBoatCategory(category) : (
+                  <>
+                    <span className="hidden md:inline">Tipo de barco</span>
+                    <span className="md:hidden">Barco</span>
+                  </>
+                )}
+              </span>
+            </div>
+            <div className="flex items-center pl-3 shrink-0">
+              <Calendar className="h-4 w-4 mr-1.5 text-gray-500" />
+              <span className="whitespace-nowrap">{formatDateRange()}</span>
+            </div>
+            <div className="flex items-center pl-3 shrink-0">
+              <Users className="h-4 w-4 mr-1.5 text-gray-500" />
+              <span className="whitespace-nowrap">{guests} {guests === 1 ? 'pessoa' : 'pessoas'}</span>
+            </div>
           </div>
         </div>
-        <div className="bg-blue-600 p-2 ml-3 rounded-full text-white shrink-0">
-          <Search className="h-4 w-4" />
+        <div className="flex items-center pl-3 ml-1.5 border-l border-gray-300">
+          <div className="p-2 bg-blue-600 rounded-full">
+            <Search className="h-4 w-4 text-white" />
+          </div>
         </div>
       </button>
+
+      <style jsx>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
 
       {/* Painel de Pesquisa Expandido */}
       {isOpen && (

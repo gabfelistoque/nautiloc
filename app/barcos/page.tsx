@@ -2,19 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Boat } from '@prisma/client';
-import { useRouter } from 'next/navigation';
-import { 
-  StarIcon, 
-  UsersIcon, 
-  MapPinIcon, 
-  CalendarIcon 
-} from '@heroicons/react/24/solid';
+import { Ship } from 'lucide-react';
+import BoatCard from '@/components/BoatCard';
 
 export default function BoatsPage() {
-  const [boats, setBoats] = useState<Boat[]>([]);
+  const [boats, setBoats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchBoats = async () => {
@@ -55,16 +49,28 @@ export default function BoatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white -mt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Encontre o Barco Perfeito
-          </h1>
-          <p className="mt-6 text-xl text-blue-100 max-w-3xl">
-            Explore nossa seleção de barcos de alta qualidade e encontre o parceiro ideal para sua próxima aventura marítima.
-          </p>
+      <div className="hero-section relative h-[40vh] min-h-[300px] flex items-center justify-center text-white overflow-hidden pt-14 md:pt-0">
+        <div className="absolute inset-0">
+          <video
+            src="https://res.cloudinary.com/gaburo/video/upload/v1734630847/fkmfzzfg4esckvefofpt.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover brightness-50"
+          />
+        </div>
+        <div className="relative container mx-auto px-4 z-30">
+          <div className="text-center pt-16">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Encontre o Barco Perfeito
+            </h1>
+            <p className="text-base md:text-lg text-gray-200 max-w-2xl mx-auto">
+              Explore nossa seleção de barcos de alta qualidade e encontre o parceiro ideal para sua próxima aventura marítima.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -78,85 +84,19 @@ export default function BoatsPage() {
         ) : (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {boats.map((boat) => (
-              <div
+              <BoatCard
                 key={boat.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-                onClick={() => router.push(`/barcos/${boat.id}`)}
-              >
-                {/* Imagem Principal */}
-                <div className="relative h-64">
-                  <img
-                    src={boat.imageUrl || '/placeholder-boat.jpg'}
-                    alt={boat.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full shadow-md">
-                    <div className="flex items-center space-x-1">
-                      <StarIcon className="w-4 h-4 text-yellow-400" />
-                      <span className="text-sm font-medium">{boat.rating}</span>
-                    </div>
-                  </div>
-                  {!boat.available && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                      <span className="text-white text-lg font-semibold">Indisponível</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Informações do Barco */}
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{boat.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{boat.description}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-blue-600">
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL'
-                        }).format(Number(boat.price))}
-                      </p>
-                      <p className="text-sm text-gray-500">por dia</p>
-                    </div>
-                  </div>
-
-                  {/* Detalhes do Barco */}
-                  <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                    <div className="flex items-center space-x-2">
-                      <UsersIcon className="w-4 h-4 text-gray-400" />
-                      <span>Capacidade: {boat.capacity}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPinIcon className="w-4 h-4 text-gray-400" />
-                      <span>{boat.location}</span>
-                    </div>
-                  </div>
-
-                  {/* Botão de Reserva */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/barcos/${boat.id}`);
-                    }}
-                    disabled={!boat.available}
-                    className={`mt-6 w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
-                      ${boat.available 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
-                        : 'bg-gray-400 cursor-not-allowed'
-                      }`}
-                  >
-                    {boat.available ? (
-                      <>
-                        <CalendarIcon className="w-4 h-4 mr-2" />
-                        Ver Detalhes
-                      </>
-                    ) : (
-                      'Indisponível'
-                    )}
-                  </button>
-                </div>
-              </div>
+                id={boat.id}
+                name={boat.name}
+                description={boat.description}
+                imageUrl={boat.imageUrl}
+                media={boat.media}
+                capacity={boat.capacity}
+                location={boat.location}
+                price={boat.price}
+                rating={boat.rating}
+                category={boat.category}
+              />
             ))}
           </div>
         )}

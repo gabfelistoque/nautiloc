@@ -2,28 +2,21 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const location = searchParams.get('location');
+  const category = searchParams.get('category');
+  const guests = searchParams.get('guests');
+  const startDate = searchParams.get('startDate');
+  const endDate = searchParams.get('endDate');
+
   try {
-    const { searchParams } = new URL(request.url);
-    const location = searchParams.get('location');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-    const guests = searchParams.get('guests');
-    const category = searchParams.get('category')?.toUpperCase();
-
-    console.log('Search params:', { location, startDate, endDate, guests, category });
-
     const boats = await prisma.boat.findMany({
       where: {
         AND: [
-          { available: true },
-          location ? { location } : {},
+          location ? { location: { contains: location, mode: 'insensitive' } } : {},
+          category ? { category: { equals: category, mode: 'insensitive' } } : {},
           guests ? { capacity: { gte: parseInt(guests) } } : {},
-          category ? { 
-            category: {
-              equals: category,
-              mode: 'insensitive'
-            }
-          } : {},
+          { available: true },
           startDate && endDate
             ? {
                 bookings: {
@@ -43,6 +36,11 @@ export async function GET(request: Request) {
         ],
       },
       include: {
+        media: {
+          orderBy: {
+            order: 'asc'
+          }
+        },
         bookings: true,
       },
       orderBy: {
@@ -50,16 +48,18 @@ export async function GET(request: Request) {
       },
     });
 
-    // Remove bookings from response
-    const boatsWithoutBookings = boats.map(({ bookings, ...boat }) => boat);
+    const boatsWithoutBookings = boats.map(({ bookings, ...boat }) => ({
+      ...boat,
+      media: boat.media.map(m => ({
+        url: m.url,
+        type: m.type
+      }))
+    }));
 
     console.log(`Found ${boatsWithoutBookings.length} boats`);
     return NextResponse.json(boatsWithoutBookings);
   } catch (error) {
-    console.error('Search error:', error);
-    return NextResponse.json(
-      { error: 'Erro ao buscar barcos' },
-      { status: 500 }
-    );
+    console.error('Error searching boats:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
