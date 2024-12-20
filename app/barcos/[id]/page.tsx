@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import BookingForm from '@/components/BookingForm';
 import ImageGallery from './components/ImageGallery';
+import WeatherForecast from '@/components/WeatherForecast';
 import { 
   WifiIcon, 
   MusicalNoteIcon, 
@@ -103,7 +104,7 @@ async function getBoat(id: string): Promise<ExtendedBoat> {
   // Transforma os dados para o formato esperado
   const transformedBoat = {
     ...boat,
-    amenities: boat.amenities.map(amenity => ({
+    amenities: boat.amenities.map((amenity: { id: string; name: string; iconName: string }) => ({
       id: amenity.id,
       name: amenity.name,
       icon: amenity.iconName,
@@ -278,23 +279,23 @@ export default async function BoatPage({ params }: { params: { id: string } }) {
 
           {/* Formulário de Reserva */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-[88px]">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-2xl font-bold">R$ {boat.price}</p>
-                  <p className="text-gray-500">por dia</p>
+            <div className="sticky top-24">
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-2xl font-bold text-blue-600">
+                    R$ {boat.price.toLocaleString('pt-BR')}
+                  </span>
+                  <span className="text-gray-500">por dia</span>
                 </div>
-                <div className="flex items-center">
-                  <span className="text-yellow-400">★</span>
-                  <span className="ml-1">4.9</span>
-                  <span className="text-gray-400 ml-1">(123)</span>
-                </div>
+                <BookingForm 
+                  boatId={boat.id} 
+                  boatName={boat.name} 
+                  price={boat.price}
+                />
               </div>
-              <BookingForm
-                boatId={boat.id}
-                boatName={boat.name}
-                price={boat.price}
-              />
+              <div className="mt-6 bg-white rounded-xl shadow-sm">
+                <WeatherForecast location={boat.location} />
+              </div>
             </div>
           </div>
         </div>
