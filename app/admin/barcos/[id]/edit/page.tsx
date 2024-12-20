@@ -184,7 +184,7 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : value,
+      [name]: type === 'number' || name === 'year' ? Number(value) : value,
     }));
   };
 
@@ -197,27 +197,12 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
       console.log('Estado do formData antes de enviar:', formData);
       const formattedData = {
         ...formData,
-        imageUrl: formData.imageUrl, // Garantir que a imageUrl seja incluída
+        imageUrl: formData.imageUrl,
         price: Number(formData.price),
         capacity: Number(formData.capacity),
         length: Number(formData.length),
         year: Number(formData.year),
-        media: formData.media.map(media => ({
-          url: media.url,
-          type: media.type,
-          publicId: media.publicId,
-        })),
-        amenities: formData.amenities.map(amenity => {
-          const commonAmenity = availableAmenities.find(a => a.name === amenity.name);
-          return {
-            id: commonAmenity?.id || amenity.id,
-          };
-        }),
       };
-
-      console.log('Enviando dados:', formattedData);
-      console.log('Mídias sendo enviadas:', formattedData.media);
-      console.log('Amenidades sendo enviadas:', formattedData.amenities);
 
       const response = await fetch(`/api/barcos/${params.id}`, {
         method: 'PUT',
@@ -228,17 +213,11 @@ export default function EditBoatPage({ params }: { params: { id: string } }) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Erro na resposta:', errorData);
-        throw new Error(errorData.error || 'Erro ao atualizar barco');
+        throw new Error('Erro ao atualizar barco');
       }
 
-      const updatedBoat = await response.json();
-      console.log('Barco atualizado:', updatedBoat);
-      console.log('Mídias retornadas:', updatedBoat.media);
-      console.log('Amenidades retornadas:', updatedBoat.amenities);
-
       router.push('/admin/barcos');
+      router.refresh();
     } catch (error: any) {
       console.error('Error updating boat:', error);
       setError(error.message || 'Erro ao atualizar barco');

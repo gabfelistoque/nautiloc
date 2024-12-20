@@ -159,12 +159,27 @@ export default function ImageGallery({ media, alt }: ImageGalleryProps) {
             </SwiperSlide>
           ))}
           {/* Botões de navegação customizados */}
-          <button className="swiper-button-prev !w-8 !h-8 !bg-white !rounded-full !shadow-lg hover:!bg-gray-50 transition-colors !left-0">
+          <button className="swiper-button-prev after:!content-['prev'] !w-4 !h-4 !bg-white !rounded-full !shadow-lg hover:!bg-gray-50 transition-colors !left-2">
             <span className="sr-only">Anterior</span>
           </button>
-          <button className="swiper-button-next !w-8 !h-8 !bg-white !rounded-full !shadow-lg hover:!bg-gray-50 transition-colors !right-0">
+          <button className="swiper-button-next after:!content-['next'] !w-4 !h-4 !bg-white !rounded-full !shadow-lg hover:!bg-gray-50 transition-colors !right-2">
             <span className="sr-only">Próximo</span>
           </button>
+
+          <style jsx global>{`
+            .swiper-button-next::after,
+            .swiper-button-prev::after {
+              font-size: 8px !important;
+              font-weight: bold;
+              margin-top: -1px;
+            }
+            .swiper-button-prev {
+              transform: scale(0.85) !important;
+            }
+            .swiper-button-next {
+              transform: scale(0.85) !important;
+            }
+          `}</style>
         </Swiper>
       </div>
 
