@@ -144,32 +144,37 @@ export default function WeatherForecast({ location }: WeatherForecastProps) {
           <div key={day.dt} 
             className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors group"
           >
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-              {/* Coluna da Data - largura fixa */}
-              <div className="flex flex-col w-[45px] sm:w-[50px] flex-shrink-0">
-                <span className="text-sm font-medium text-gray-900">
-                  {format(new Date(day.dt * 1000), 'EEE', { locale: ptBR }).slice(0, 3)}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {format(new Date(day.dt * 1000), 'd MMM', { locale: ptBR })}
-                </span>
-              </div>
-              <div className="text-gray-300 hidden sm:block">|</div>
-              {/* Coluna do Ícone - largura fixa */}
-              <div className="w-[32px] sm:w-[40px] flex items-center justify-center flex-shrink-0">
-                <div className="text-blue-500 group-hover:text-blue-600 transition-colors">
-                  {getWeatherIcon(day.weather.id)}
+            {/* Data - Fixa */}
+            <div className="flex flex-col w-[45px] sm:w-[50px] flex-shrink-0">
+              <span className="text-sm font-medium text-gray-900">
+                {format(new Date(day.dt * 1000), 'EEE', { locale: ptBR }).slice(0, 3)}
+              </span>
+              <span className="text-xs text-gray-500">
+                {format(new Date(day.dt * 1000), 'd MMM', { locale: ptBR })}
+              </span>
+            </div>
+
+            {/* Container com scroll */}
+            <div className="flex-1 overflow-x-auto scrollbar-hide mx-2 border-x border-gray-200 px-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-fit">
+                {/* Ícone */}
+                <div className="w-[32px] sm:w-[36px] flex items-center justify-center flex-shrink-0">
+                  <div className="text-blue-500 group-hover:text-blue-600 transition-colors">
+                    {getWeatherIcon(day.weather.id)}
+                  </div>
+                </div>
+                
+                {/* Descrição */}
+                <div className="w-[100px] sm:w-[120px] flex-shrink-0">
+                  <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                    {day.weather.description}
+                  </span>
                 </div>
               </div>
-              {/* Coluna da Descrição - largura fixa */}
-              <div className="w-[90px] sm:w-[120px] flex-shrink-0">
-                <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors truncate">
-                  {day.weather.description}
-                </span>
-              </div>
             </div>
-            {/* Coluna da Temperatura */}
-            <div className="w-[50px] sm:w-[60px] flex justify-end flex-shrink-0">
+            
+            {/* Temperatura - Fixa */}
+            <div className="w-[45px] sm:w-[50px] flex justify-end flex-shrink-0">
               <span className="text-base font-medium text-gray-900">
                 {Math.round(day.temp)}°C
               </span>
