@@ -97,6 +97,7 @@ model Media {
   id        String   @id @default(cuid())
   url       String
   type      String   // "IMAGE" ou "VIDEO"
+  publicId  String?  // ID público do Cloudinary
   boat      Boat     @relation(fields: [boatId], references: [id])
   boatId    String
   createdAt DateTime @default(now())
