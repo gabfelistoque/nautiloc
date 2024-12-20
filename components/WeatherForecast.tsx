@@ -30,7 +30,22 @@ async function getWeatherForecast(coords: { lat: number; lon: number }) {
     const data = await response.json();
     
     // Agrupa previsões por dia
-    const dailyForecasts = data.list.reduce((acc: any[], item: any) => {
+    interface DailyForecast {
+      dt: number;
+      temp: number;
+      temp_min: number;
+      temp_max: number;
+      weather: {
+        id: number;
+        description: string;
+      };
+    }
+
+    interface ForecastAccumulator {
+      [key: string]: DailyForecast;
+    }
+
+    const dailyForecasts = data.list.reduce((acc: ForecastAccumulator, item: any) => {
       const date = new Date(item.dt * 1000).toDateString();
       
       if (!acc[date]) {
