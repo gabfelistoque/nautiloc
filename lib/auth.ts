@@ -2,7 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import { hash } from "@/app/libs/auth";
-import { getServerSession } from "next-auth/next";
+import { getToken } from "next-auth/jwt";
 
 const prisma = new PrismaClient();
 
@@ -76,17 +76,13 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Se a URL for a página inicial após o login
-      if (url.startsWith(baseUrl)) {
-        const session = await getServerSession(authOptions);
-        // Se for um usuário normal, redireciona para minhas reservas
-        if (session?.user?.role === 'USER') {
-          return `${baseUrl}/reservas/minhas`;
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        const token = await getToken({ req: {} as any });
+        if (token?.role === 'USER') {
+          return `${baseUrl}/minhas-reservas`;
         }
-        // Se for admin, mantém o comportamento padrão
-        return url;
       }
-      return baseUrl;
+      return url;
     }
   },
   debug: process.env.NODE_ENV === "development",
