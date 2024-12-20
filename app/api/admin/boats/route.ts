@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se já existe um barco com o mesmo nome
-    const existingBoat = await prisma.boat.findUnique({
+    const existingBoat = await prisma.boat.findFirst({
       where: { name },
     });
 
