@@ -98,6 +98,7 @@ model Media {
   url       String
   type      String   // "IMAGE" ou "VIDEO"
   publicId  String?  @default("") // ID público do Cloudinary
+  order     Int      @default(0)  // Ordem da mídia na galeria
   boat      Boat     @relation(fields: [boatId], references: [id])
   boatId    String
   createdAt DateTime @default(now())
