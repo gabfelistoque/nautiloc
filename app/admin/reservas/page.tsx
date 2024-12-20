@@ -77,7 +77,7 @@ export default function AdminBookingsPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/reservations/${bookingId}`, {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
         method: 'DELETE',
       });
 

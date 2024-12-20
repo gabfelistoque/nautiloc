@@ -198,13 +198,13 @@ export async function DELETE(
       );
     }
 
-    // Atualizar o status da reserva para CANCELADO
-    const updatedBooking = await prisma.booking.update({
-      where: { id: params.id },
-      data: { status: 'CANCELADO' }
+    const deletedBooking = await prisma.booking.delete({
+      where: { id: params.id }
     });
 
-    return NextResponse.json(updatedBooking);
+    return NextResponse.json({ message: 'Reserva deletada com sucesso' });
+
+
   } catch (error) {
     console.error('Error cancelling booking:', error);
     return NextResponse.json(
