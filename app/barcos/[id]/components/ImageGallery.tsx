@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
+import ImageGallerySkeleton from './ImageGallerySkeleton';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
@@ -19,6 +20,37 @@ interface ImageGalleryProps {
 
 export default function ImageGallery({ media, alt }: ImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Pré-carrega as imagens
+    const preloadImages = async () => {
+      setIsLoading(true);
+      try {
+        await Promise.all(
+          media
+            .filter(item => item.type === 'IMAGE')
+            .map(item => {
+              return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = item.url;
+                img.onload = resolve;
+                img.onerror = reject;
+              });
+            })
+        );
+      } catch (error) {
+        console.error('Erro ao carregar imagens:', error);
+      }
+      setIsLoading(false);
+    };
+
+    preloadImages();
+  }, [media]);
+
+  if (isLoading) {
+    return <ImageGallerySkeleton />;
+  }
 
   // Reordena a mídia para que a imagem principal fique por último
   const reorderedMedia = [...media].sort((a, b) => {
