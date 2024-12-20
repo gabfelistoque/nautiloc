@@ -4,6 +4,7 @@ import { HiLocationMarker } from 'react-icons/hi';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useState, useEffect } from 'react';
+import WeatherForecastSkeleton from './WeatherForecastSkeleton';
 
 interface WeatherForecastProps {
   location: string;
@@ -96,17 +97,24 @@ const getWeatherIcon = (weatherId: number) => {
 export default function WeatherForecast({ location }: WeatherForecastProps) {
   const [selectedLocation, setSelectedLocation] = useState(locations[0]);
   const [forecast, setForecast] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchForecast = async () => {
+      setIsLoading(true);
       const data = await getWeatherForecast(selectedLocation.coords);
       if (data) {
         setForecast(data);
       }
+      setIsLoading(false);
     };
     
     fetchForecast();
   }, [selectedLocation]);
+
+  if (isLoading) {
+    return <WeatherForecastSkeleton />;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
