@@ -46,12 +46,12 @@ const NavigationTools = () => {
 
     // Manipulador para orientação do dispositivo
     const handleOrientation = (event: DeviceOrientationEventWithWebkit) => {
-      if (event.webkitCompassHeading) {
+      if (event.webkitCompassHeading !== undefined) {
         // Para dispositivos iOS
-        setData(prev => ({ ...prev, heading: event.webkitCompassHeading }));
-      } else if (event.alpha) {
+        setData(prev => ({ ...prev, heading: event.webkitCompassHeading || null }));
+      } else if (event.alpha !== null) {
         // Para outros dispositivos
-        setData(prev => ({ ...prev, heading: 360 - event.alpha }));
+        setData(prev => ({ ...prev, heading: event.alpha ? 360 - event.alpha : null }));
       }
     };
 
