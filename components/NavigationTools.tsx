@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface NavigationData {
@@ -16,6 +16,12 @@ interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
   webkitCompassHeading?: number;
 }
 
+interface Position {
+  latitude: number;
+  longitude: number;
+  timestamp: number;
+}
+
 const NavigationTools = () => {
   const [data, setData] = useState<NavigationData>({
     heading: null,
@@ -26,10 +32,59 @@ const NavigationTools = () => {
     gpsStatus: 'not-requested'
   });
   const [showDebug, setShowDebug] = useState(false);
+  const lastPosition = useRef<Position | null>(null);
 
   const addDebugMessage = (message: string) => {
     console.log(message);
     setData(prev => ({ ...prev, debug: `${new Date().toLocaleTimeString()}: ${message}\n${prev.debug}` }));
+  };
+
+  // Função para calcular a distância entre dois pontos em metros
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3; // Raio da Terra em metros
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+  };
+
+  // Função para calcular a velocidade com base na mudança de posição
+  const calculateSpeed = (currentPosition: Position): number | null => {
+    if (!lastPosition.current) {
+      lastPosition.current = currentPosition;
+      return null;
+    }
+
+    const distance = calculateDistance(
+      lastPosition.current.latitude,
+      lastPosition.current.longitude,
+      currentPosition.latitude,
+      currentPosition.longitude
+    );
+
+    const timeDiff = (currentPosition.timestamp - lastPosition.current.timestamp) / 1000; // em segundos
+    
+    // Atualiza a última posição
+    lastPosition.current = currentPosition;
+
+    // Se o tempo for muito pequeno ou a distância for muito pequena, retorna null
+    if (timeDiff < 0.1 || distance < 0.1) return null;
+
+    // Calcula a velocidade em km/h
+    const speedMS = distance / timeDiff; // m/s
+    const speedKMH = speedMS * 3.6; // km/h
+
+    // Se a velocidade for muito alta (provavelmente erro), retorna null
+    if (speedKMH > 200) return null;
+
+    return speedKMH;
   };
 
   const requestGPSPermission = async () => {
@@ -84,18 +139,32 @@ const NavigationTools = () => {
     
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        addDebugMessage(`
-          Posição GPS atualizada:
-          Velocidade: ${position.coords.speed !== null ? position.coords.speed + ' m/s' : 'não disponível'}
-          Precisão: ${position.coords.accuracy} metros
-          Latitude: ${position.coords.latitude}
-          Longitude: ${position.coords.longitude}
-        `);
+        const currentPosition: Position = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          timestamp: position.timestamp
+        };
 
+        // Tenta usar a velocidade do GPS primeiro
         if (position.coords.speed !== null) {
           const speedKmh = position.coords.speed * 3.6;
           setData(prev => ({ ...prev, speed: speedKmh }));
+          addDebugMessage(`Velocidade do GPS: ${speedKmh.toFixed(1)} km/h`);
+        } else {
+          // Se não tiver velocidade do GPS, calcula baseado na mudança de posição
+          const calculatedSpeed = calculateSpeed(currentPosition);
+          if (calculatedSpeed !== null) {
+            setData(prev => ({ ...prev, speed: calculatedSpeed }));
+            addDebugMessage(`Velocidade calculada: ${calculatedSpeed.toFixed(1)} km/h`);
+          }
         }
+
+        addDebugMessage(`
+          Posição GPS atualizada:
+          Latitude: ${position.coords.latitude}
+          Longitude: ${position.coords.longitude}
+          Precisão: ${position.coords.accuracy} metros
+        `);
       },
       (error) => {
         let errorMessage = 'Erro ao obter localização';
