@@ -34,6 +34,8 @@ interface Position {
   latitude: number;
   longitude: number;
   timestamp: number;
+  accuracy: number;
+  speed: number | null;
 }
 
 interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
@@ -41,6 +43,10 @@ interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
 }
 
 const WEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || '';
+
+const SPEED_BUFFER_SIZE = 5; // Quantidade de medições para média móvel
+const MIN_ACCURACY = 20; // Precisão mínima em metros
+const SPEED_THRESHOLD = 1.0; // Velocidade mínima em km/h para considerar movimento
 
 const NavigationTools = () => {
   const [data, setData] = useState<NavigationData>({
@@ -67,15 +73,177 @@ const NavigationTools = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [useNautical, setUseNautical] = useState(false);
+  const speedBuffer = useRef<number[]>([]);
+  const lastValidSpeed = useRef<number>(0);
   const lastPosition = useRef<Position | null>(null);
+  const totalDistance = useRef<number>(0);
   const speedHistory = useRef<number[]>([]);
   const startTime = useRef<number | null>(null);
-  const totalDistance = useRef<number>(0);
-  const weatherUpdateInterval = useRef<NodeJS.Timeout | null>(null);
+  const weatherUpdateInterval = useRef<number | null>(null);
 
   const addDebugMessage = (message: string) => {
     console.log(message);
     setData(prev => ({ ...prev, debug: `${new Date().toLocaleTimeString()}: ${message}\n${prev.debug}` }));
+  };
+
+  const calculateAverageSpeed = (newSpeed: number): number => {
+    speedBuffer.current.push(newSpeed);
+    if (speedBuffer.current.length > SPEED_BUFFER_SIZE) {
+      speedBuffer.current.shift();
+    }
+    
+    const sortedSpeeds = [...speedBuffer.current].sort((a, b) => a - b);
+    const validSpeeds = sortedSpeeds.slice(1, -1); // Remove o maior e menor valor
+    
+    if (validSpeeds.length === 0) return 0;
+    
+    const avg = validSpeeds.reduce((a, b) => a + b, 0) / validSpeeds.length;
+    return avg < SPEED_THRESHOLD ? 0 : avg;
+  };
+
+  const processSpeed = (position: Position): number => {
+    if (position.accuracy > MIN_ACCURACY) {
+      addDebugMessage(`Precisão baixa (${position.accuracy}m), mantendo última velocidade`);
+      return lastValidSpeed.current;
+    }
+
+    let speed: number;
+
+    if (position.speed !== null) {
+      speed = position.speed * 3.6; // Converte m/s para km/h
+    } else {
+      if (!lastPosition.current) {
+        lastPosition.current = position;
+        return 0;
+      }
+
+      const timeDiff = (position.timestamp - lastPosition.current.timestamp) / 1000;
+      if (timeDiff < 1) {
+        return lastValidSpeed.current; // Muito pouco tempo entre medições
+      }
+
+      const distance = calculateDistance(
+        lastPosition.current.latitude,
+        lastPosition.current.longitude,
+        position.latitude,
+        position.longitude
+      );
+
+      speed = (distance / timeDiff) * 3.6; // Converte m/s para km/h
+    }
+
+    lastPosition.current = position;
+
+    if (speed > 200 || speed < 0) { // Velocidade improvável
+      return lastValidSpeed.current;
+    }
+
+    const averageSpeed = calculateAverageSpeed(speed);
+    lastValidSpeed.current = averageSpeed;
+    return averageSpeed;
+  };
+
+  const updateStats = (speed: number) => {
+    speedHistory.current.push(speed);
+    if (speedHistory.current.length > 10) { // mantém apenas últimos 10 registros
+      speedHistory.current.shift();
+    }
+
+    const avgSpeed = speedHistory.current.reduce((a, b) => a + b, 0) / speedHistory.current.length;
+
+    const maxSpeed = Math.max(...speedHistory.current);
+
+    if (!startTime.current) {
+      startTime.current = Date.now();
+    }
+
+    if (lastPosition.current) {
+      const segmentDistance = calculateDistance(
+        lastPosition.current.latitude,
+        lastPosition.current.longitude,
+        lastPosition.current.latitude,
+        lastPosition.current.longitude
+      );
+      totalDistance.current += segmentDistance;
+    }
+
+    setData(prev => ({
+      ...prev,
+      avgSpeed,
+      maxSpeed,
+      distance: totalDistance.current / 1000, // converte para km
+    }));
+  };
+
+  const initializeGPS = () => {
+    addDebugMessage('Inicializando GPS...');
+    
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const currentPosition: Position = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          timestamp: position.timestamp,
+          accuracy: position.coords.accuracy,
+          speed: position.coords.speed
+        };
+
+        // Atualiza dados meteorológicos a cada 5 minutos
+        if (!weatherUpdateInterval.current) {
+          updateWeather(position.coords.latitude, position.coords.longitude);
+          weatherUpdateInterval.current = setInterval(() => {
+            updateWeather(position.coords.latitude, position.coords.longitude);
+          }, 5 * 60 * 1000);
+        }
+
+        const processedSpeed = processSpeed(currentPosition);
+        
+        setData(prev => ({
+          ...prev,
+          speed: processedSpeed,
+          accuracy: position.coords.accuracy,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          course: position.coords.heading || prev.course
+        }));
+
+        if (processedSpeed > 0) {
+          updateStats(processedSpeed);
+        }
+
+        addDebugMessage(`
+          Velocidade: ${processedSpeed.toFixed(1)} km/h
+          Precisão: ${position.coords.accuracy.toFixed(1)}m
+          GPS Speed: ${position.coords.speed !== null ? (position.coords.speed * 3.6).toFixed(1) : 'N/A'} km/h
+        `);
+      },
+      (error) => {
+        let errorMessage = 'Erro ao obter localização';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Permissão de localização negada';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = 'Localização indisponível';
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = 'Tempo esgotado ao obter localização';
+        }
+        addDebugMessage(`Erro GPS: ${errorMessage} (${error.message})`);
+        setData(prev => ({ ...prev, error: errorMessage }));
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+
+    return () => {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      if (weatherUpdateInterval.current) {
+        clearInterval(weatherUpdateInterval.current);
+      }
+    };
   };
 
   const toggleFullscreen = async () => {
@@ -83,9 +251,7 @@ const NavigationTools = () => {
       if (!document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
         setIsFullscreen(true);
-        // Prevenir que a tela apague no iOS
         if (navigator.userAgent.match(/iPhone/i)) {
-          // @ts-ignore
           navigator.wakeLock?.request('screen');
         }
       } else {
@@ -128,81 +294,6 @@ const NavigationTools = () => {
     return R * c;
   };
 
-  const calculateSpeed = (currentPosition: Position): number | null => {
-    if (!lastPosition.current) {
-      lastPosition.current = currentPosition;
-      return null;
-    }
-
-    const distance = calculateDistance(
-      lastPosition.current.latitude,
-      lastPosition.current.longitude,
-      currentPosition.latitude,
-      currentPosition.longitude
-    );
-
-    const timeDiff = (currentPosition.timestamp - lastPosition.current.timestamp) / 1000; // em segundos
-    
-    // Se o tempo for muito pequeno, não calcula
-    if (timeDiff < 1) return null;
-
-    // Calcula a velocidade em km/h
-    const speedMS = distance / timeDiff; // m/s
-    const speedKMH = speedMS * 3.6; // km/h
-
-    // Atualiza a última posição apenas se a velocidade for válida
-    if (speedKMH < 0.5) { // Se menor que 0.5 km/h, considera parado
-      return 0;
-    }
-
-    // Se a velocidade for muito alta (provavelmente erro), mantém a última posição
-    if (speedKMH > 200) {
-      return null;
-    }
-
-    lastPosition.current = currentPosition;
-    return speedKMH;
-  };
-
-  const updateStats = (speed: number | null, position: Position) => {
-    if (speed !== null) {
-      // Atualiza histórico de velocidade
-      speedHistory.current.push(speed);
-      if (speedHistory.current.length > 10) { // mantém apenas últimos 10 registros
-        speedHistory.current.shift();
-      }
-
-      // Calcula velocidade média
-      const avgSpeed = speedHistory.current.reduce((a, b) => a + b, 0) / speedHistory.current.length;
-
-      // Atualiza velocidade máxima
-      const maxSpeed = Math.max(...speedHistory.current);
-
-      // Inicializa tempo de início se necessário
-      if (!startTime.current) {
-        startTime.current = Date.now();
-      }
-
-      // Atualiza distância total
-      if (lastPosition.current) {
-        const segmentDistance = calculateDistance(
-          lastPosition.current.latitude,
-          lastPosition.current.longitude,
-          position.latitude,
-          position.longitude
-        );
-        totalDistance.current += segmentDistance;
-      }
-
-      setData(prev => ({
-        ...prev,
-        avgSpeed,
-        maxSpeed,
-        distance: totalDistance.current / 1000, // converte para km
-      }));
-    }
-  };
-
   const requestGPSPermission = async () => {
     addDebugMessage('Solicitando permissão do GPS...');
     setData(prev => ({ ...prev, gpsStatus: 'requesting' }));
@@ -215,7 +306,6 @@ const NavigationTools = () => {
         setData(prev => ({ ...prev, gpsStatus: 'granted' }));
         initializeGPS();
       } else if (permission.state === 'prompt') {
-        // Solicitar permissão explicitamente
         navigator.geolocation.getCurrentPosition(
           () => {
             addDebugMessage('Permissão do GPS concedida após prompt');
@@ -250,102 +340,12 @@ const NavigationTools = () => {
     }
   };
 
-  const initializeGPS = () => {
-    addDebugMessage('Inicializando GPS...');
-    
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const currentPosition: Position = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          timestamp: position.timestamp
-        };
-
-        setData(prev => ({
-          ...prev,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        }));
-
-        // Atualiza o curso (direção do movimento)
-        if (position.coords.heading !== null) {
-          setData(prev => ({ ...prev, course: position.coords.heading }));
-        }
-
-        // Atualiza a precisão
-        setData(prev => ({ ...prev, accuracy: position.coords.accuracy }));
-
-        // Se a precisão for ruim (> 20 metros), não atualiza a velocidade
-        if (position.coords.accuracy > 20) {
-          addDebugMessage(`Precisão muito baixa: ${position.coords.accuracy}m`);
-          return;
-        }
-
-        // Tenta usar a velocidade do GPS primeiro
-        if (position.coords.speed !== null) {
-          const speedKmh = position.coords.speed * 3.6;
-          // Só atualiza se a velocidade for maior que 0.5 km/h ou for 0
-          if (speedKmh > 0.5 || speedKmh === 0) {
-            setData(prev => ({ ...prev, speed: speedKmh }));
-            updateStats(speedKmh, currentPosition);
-            addDebugMessage(`Velocidade do GPS: ${speedKmh.toFixed(1)} km/h`);
-          }
-        } else {
-          // Se não tiver velocidade do GPS, calcula baseado na mudança de posição
-          const calculatedSpeed = calculateSpeed(currentPosition);
-          if (calculatedSpeed !== null) {
-            setData(prev => ({ ...prev, speed: calculatedSpeed }));
-            updateStats(calculatedSpeed, currentPosition);
-            addDebugMessage(`Velocidade calculada: ${calculatedSpeed.toFixed(1)} km/h`);
-          }
-        }
-
-        lastPosition.current = currentPosition;
-      },
-      (error) => {
-        let errorMessage = 'Erro ao obter localização';
-        if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = 'Permissão de localização negada';
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = 'Localização indisponível';
-        } else if (error.code === error.TIMEOUT) {
-          errorMessage = 'Tempo esgotado ao obter localização';
-        }
-        addDebugMessage(`Erro GPS: ${errorMessage} (${error.message})`);
-        setData(prev => ({ ...prev, error: errorMessage }));
-      },
-      { 
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
-
-    // Tenta manter a tela ligada
-    try {
-      // @ts-ignore
-      navigator.wakeLock?.request('screen');
-    } catch (err) {
-      addDebugMessage('Erro ao tentar manter tela ligada: ' + err);
-    }
-
-    return () => {
-      if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-      if (weatherUpdateInterval.current) {
-        clearInterval(weatherUpdateInterval.current);
-      }
-    };
-  };
-
   const requestSensorPermissions = async () => {
     setData(prev => ({ ...prev, permissionStatus: 'requesting' }));
     
     try {
       addDebugMessage('Solicitando permissões...');
       
-      // Solicitar permissão para orientação do dispositivo (iOS)
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
         try {
           addDebugMessage('Dispositivo iOS detectado, solicitando permissão...');
@@ -354,7 +354,6 @@ const NavigationTools = () => {
             addDebugMessage('Permissão de orientação concedida');
             setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
             initializeSensors();
-            // Solicitar GPS após permissão da bússola
             requestGPSPermission();
           } else {
             addDebugMessage('Permissão de orientação negada');
@@ -368,14 +367,12 @@ const NavigationTools = () => {
           addDebugMessage('Erro ao solicitar permissão de orientação, tentando como Android');
           setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
           initializeSensors();
-          // Solicitar GPS após permissão da bússola
           requestGPSPermission();
         }
       } else {
         addDebugMessage('Dispositivo não requer permissão explícita para orientação');
         setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
         initializeSensors();
-        // Solicitar GPS após permissão da bússola
         requestGPSPermission();
       }
     } catch (err) {
@@ -407,41 +404,42 @@ const NavigationTools = () => {
     };
   };
 
-  const updateWeather = async (latitude: number, longitude: number) => {
-    try {
-      if (!WEATHER_API_KEY) {
-        addDebugMessage('Chave da API do OpenWeather não configurada');
-        return;
-      }
+  const updateWeather = async (lat: number, lon: number) => {
+    if (!WEATHER_API_KEY) {
+      addDebugMessage('API key não configurada para dados meteorológicos');
+      return;
+    }
 
+    try {
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${WEATHER_API_KEY}&units=metric`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
       );
       
       if (!response.ok) {
         throw new Error('Erro ao buscar dados meteorológicos');
       }
 
-      const weatherData: WeatherData = await response.json();
+      const weatherData = await response.json();
       
       setData(prev => ({
         ...prev,
         weather: {
-          windSpeed: weatherData.wind.speed,
-          windDirection: weatherData.wind.deg,
-          humidity: weatherData.main.humidity,
-          temperature: weatherData.main.temp
+          windSpeed: weatherData.wind?.speed || null,
+          windDirection: weatherData.wind?.deg || null,
+          humidity: weatherData.main?.humidity || null,
+          temperature: weatherData.main?.temp || null
         }
       }));
+
+      addDebugMessage(`Dados meteorológicos atualizados`);
     } catch (error) {
-      addDebugMessage('Erro ao atualizar dados meteorológicos: ' + error);
+      addDebugMessage(`Erro ao buscar dados meteorológicos: ${error}`);
     }
   };
 
   const getStaticMapUrl = (latitude: number | null, longitude: number | null, zoom: number = 15): string => {
     if (!latitude || !longitude) return '';
     
-    // Usando OpenStreetMap estático (sem necessidade de API key)
     return `https://staticmap.openstreetmap.de/staticmap.php?center=${latitude},${longitude}&zoom=${zoom}&size=300x200&markers=${latitude},${longitude}`;
   };
 
@@ -528,7 +526,6 @@ const NavigationTools = () => {
               {formatCoordinate(data.latitude, 'lat')} <br />
               {formatCoordinate(data.longitude, 'lon')}
             </div>
-            <div className="text-sm text-gray-500">Coordenadas</div>
           </div>
 
           {/* Grid de informações */}
