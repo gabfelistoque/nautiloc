@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import BookingForm from '@/components/BookingForm';
 import ImageGallery from '@/components/ImageGallery';
 
