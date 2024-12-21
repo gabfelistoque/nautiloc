@@ -9,6 +9,11 @@ interface NavigationData {
   error: string | null;
 }
 
+// Estendendo a interface DeviceOrientationEvent para incluir propriedades webkit
+interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
+  webkitCompassHeading?: number;
+}
+
 const NavigationTools = () => {
   const [data, setData] = useState<NavigationData>({
     heading: null,
@@ -40,7 +45,7 @@ const NavigationTools = () => {
     requestPermission();
 
     // Manipulador para orientação do dispositivo
-    const handleOrientation = (event: DeviceOrientationEvent) => {
+    const handleOrientation = (event: DeviceOrientationEventWithWebkit) => {
       if (event.webkitCompassHeading) {
         // Para dispositivos iOS
         setData(prev => ({ ...prev, heading: event.webkitCompassHeading }));
@@ -60,7 +65,7 @@ const NavigationTools = () => {
     };
 
     // Configurar observadores
-    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation as any, true);
     
     const watchId = navigator.geolocation.watchPosition(
       handlePosition,
@@ -70,7 +75,7 @@ const NavigationTools = () => {
 
     // Limpar observadores
     return () => {
-      window.removeEventListener('deviceorientation', handleOrientation, true);
+      window.removeEventListener('deviceorientation', handleOrientation as any, true);
       navigator.geolocation.clearWatch(watchId);
     };
   }, []);
