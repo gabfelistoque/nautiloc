@@ -60,7 +60,7 @@ export default function SearchForm() {
           <select
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+            className="block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="" className="text-gray-900">Selecione um local</option>
             {locations.map((loc) => (
