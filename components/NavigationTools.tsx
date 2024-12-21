@@ -143,19 +143,24 @@ const NavigationTools = () => {
 
     const timeDiff = (currentPosition.timestamp - lastPosition.current.timestamp) / 1000; // em segundos
     
-    // Atualiza a última posição
-    lastPosition.current = currentPosition;
-
-    // Se o tempo for muito pequeno ou a distância for muito pequena, retorna null
-    if (timeDiff < 0.1 || distance < 0.1) return null;
+    // Se o tempo for muito pequeno, não calcula
+    if (timeDiff < 1) return null;
 
     // Calcula a velocidade em km/h
     const speedMS = distance / timeDiff; // m/s
     const speedKMH = speedMS * 3.6; // km/h
 
-    // Se a velocidade for muito alta (provavelmente erro), retorna null
-    if (speedKMH > 200) return null;
+    // Atualiza a última posição apenas se a velocidade for válida
+    if (speedKMH < 0.5) { // Se menor que 0.5 km/h, considera parado
+      return 0;
+    }
 
+    // Se a velocidade for muito alta (provavelmente erro), mantém a última posição
+    if (speedKMH > 200) {
+      return null;
+    }
+
+    lastPosition.current = currentPosition;
     return speedKMH;
   };
 
@@ -262,14 +267,6 @@ const NavigationTools = () => {
           longitude: position.coords.longitude
         }));
 
-        // Atualiza dados meteorológicos a cada 5 minutos
-        if (!weatherUpdateInterval.current) {
-          updateWeather(position.coords.latitude, position.coords.longitude);
-          weatherUpdateInterval.current = setInterval(() => {
-            updateWeather(position.coords.latitude, position.coords.longitude);
-          }, 5 * 60 * 1000);
-        }
-
         // Atualiza o curso (direção do movimento)
         if (position.coords.heading !== null) {
           setData(prev => ({ ...prev, course: position.coords.heading }));
@@ -278,12 +275,21 @@ const NavigationTools = () => {
         // Atualiza a precisão
         setData(prev => ({ ...prev, accuracy: position.coords.accuracy }));
 
+        // Se a precisão for ruim (> 20 metros), não atualiza a velocidade
+        if (position.coords.accuracy > 20) {
+          addDebugMessage(`Precisão muito baixa: ${position.coords.accuracy}m`);
+          return;
+        }
+
         // Tenta usar a velocidade do GPS primeiro
         if (position.coords.speed !== null) {
           const speedKmh = position.coords.speed * 3.6;
-          setData(prev => ({ ...prev, speed: speedKmh }));
-          updateStats(speedKmh, currentPosition);
-          addDebugMessage(`Velocidade do GPS: ${speedKmh.toFixed(1)} km/h`);
+          // Só atualiza se a velocidade for maior que 0.5 km/h ou for 0
+          if (speedKmh > 0.5 || speedKmh === 0) {
+            setData(prev => ({ ...prev, speed: speedKmh }));
+            updateStats(speedKmh, currentPosition);
+            addDebugMessage(`Velocidade do GPS: ${speedKmh.toFixed(1)} km/h`);
+          }
         } else {
           // Se não tiver velocidade do GPS, calcula baseado na mudança de posição
           const calculatedSpeed = calculateSpeed(currentPosition);
@@ -453,7 +459,7 @@ const NavigationTools = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center space-y-6 p-4 bg-white rounded-lg shadow-md">
+    <div className="flex flex-col items-center space-y-6 p-4">
       {/* Botões de controle */}
       <div className="absolute top-4 right-4 flex gap-2">
         <button
@@ -494,7 +500,7 @@ const NavigationTools = () => {
       {data.permissionStatus === 'granted' && (
         <>
           {/* Bússola */}
-          <div className="relative w-40 h-40 mt-8">
+          <div className="relative w-48 h-48 mt-4">
             <motion.div
               className="absolute inset-0 flex items-center justify-center"
               style={{
@@ -505,7 +511,7 @@ const NavigationTools = () => {
               animate={{ rotate: data.heading || 0 }}
               transition={{ type: "spring", stiffness: 100 }}
             >
-              <div className="absolute top-0 w-1 h-5 bg-red-500" />
+              <div className="absolute top-0 w-1 h-6 bg-red-500" />
             </motion.div>
             
             {/* Direção em graus */}
@@ -515,22 +521,6 @@ const NavigationTools = () => {
               </div>
             </div>
           </div>
-
-          {/* Mapa */}
-          {data.latitude && data.longitude && (
-            <div className="w-full max-w-sm overflow-hidden rounded-lg shadow-md">
-              <img
-                src={getStaticMapUrl(data.latitude, data.longitude)}
-                alt="Localização atual"
-                className="w-full h-[200px] object-cover"
-                onError={(e) => {
-                  // Se a imagem falhar, mostra uma mensagem
-                  e.currentTarget.style.display = 'none';
-                  addDebugMessage('Erro ao carregar o mapa');
-                }}
-              />
-            </div>
-          )}
 
           {/* Coordenadas GPS */}
           <div className="text-center p-3 bg-gray-50 rounded-lg w-full max-w-sm">
