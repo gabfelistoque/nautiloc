@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Boat } from '@prisma/client';
 import { Ship } from 'lucide-react';
 import BoatCard from '@/components/BoatCard';
 
 export default function BoatsPage() {
+  const searchParams = useSearchParams();
   const [boats, setBoats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +15,18 @@ export default function BoatsPage() {
   useEffect(() => {
     const fetchBoats = async () => {
       try {
-        const response = await fetch('/api/barcos');
+        const params = new URLSearchParams();
+        const location = searchParams.get('location');
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
+        const guests = searchParams.get('guests');
+
+        if (location) params.append('location', location);
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (guests) params.append('guests', guests);
+
+        const response = await fetch(`/api/search?${params.toString()}`);
         if (!response.ok) {
           throw new Error('Falha ao carregar barcos');
         }
@@ -27,7 +40,7 @@ export default function BoatsPage() {
     };
 
     fetchBoats();
-  }, []);
+  }, [searchParams]);
 
   if (loading) {
     return (

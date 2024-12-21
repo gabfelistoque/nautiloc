@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -36,30 +36,20 @@ export async function GET(request: Request) {
         ],
       },
       include: {
-        media: {
-          orderBy: {
-            order: 'asc'
-          }
-        },
-        bookings: true,
+        media: true,
+        amenities: true,
       },
       orderBy: {
         rating: 'desc',
       },
     });
 
-    const boatsWithoutBookings = boats.map(({ bookings, ...boat }) => ({
-      ...boat,
-      media: boat.media.map(m => ({
-        url: m.url,
-        type: m.type
-      }))
-    }));
-
-    console.log(`Found ${boatsWithoutBookings.length} boats`);
-    return NextResponse.json(boatsWithoutBookings);
+    return NextResponse.json(boats);
   } catch (error) {
     console.error('Error searching boats:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Erro ao buscar barcos' },
+      { status: 500 }
+    );
   }
 }

@@ -1,10 +1,8 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaClient } from "@prisma/client";
 import { hash } from "@/app/libs/auth";
-import { getToken } from "next-auth/jwt";
-
-const prisma = new PrismaClient();
+import prisma from "./prisma";
+import { User } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -22,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<User | null> {
         try {
           if (!credentials?.email || !credentials?.password) {
             console.log("Missing credentials");
@@ -46,15 +44,9 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid credentials");
           }
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name || "",
-            phone: user.phone || "",
-            role: user.role,
-          };
+          return user;
         } catch (error) {
-          console.log("Error in authorize:", error);
+          console.error("Error in authorize:", error);
           return null;
         }
       }
@@ -62,28 +54,24 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
+      if (user && 'role' in user) {
         token.role = user.role;
-        token.id = user.id;
+        token.phone = (user as User).phone;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session?.user) {
         session.user.role = token.role as string;
-        session.user.id = token.id as string;
+        session.user.phone = (token.phone as string) || "";
       }
       return session;
     },
     async redirect({ url, baseUrl }) {
-      if (url === baseUrl || url === `${baseUrl}/`) {
-        const token = await getToken({ req: {} as any });
-        if (token?.role === 'USER') {
-          return `${baseUrl}/minhas-reservas`;
-        }
-      }
-      return url;
-    }
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
   },
   debug: process.env.NODE_ENV === "development",
 };

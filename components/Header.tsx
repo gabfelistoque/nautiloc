@@ -2,7 +2,7 @@
 
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { UserCircle, Menu, LayoutDashboard, Ship, Calendar, Users, Heart, LogOut, LogIn, UserPlus } from 'lucide-react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
@@ -11,6 +11,7 @@ import SearchBar from './SearchBar';
 export default function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -34,7 +35,8 @@ export default function Header() {
         menuRef.current &&
         buttonRef.current &&
         !menuRef.current.contains(event.target as Node) &&
-        !buttonRef.current.contains(event.target as Node)
+        !buttonRef.current.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest('a') // Ignora cliques em links
       ) {
         setIsUserMenuOpen(false);
       }
@@ -53,6 +55,26 @@ export default function Header() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      setIsUserMenuOpen(false);
+      const data = await signOut({ 
+        redirect: false,
+        callbackUrl: '/' 
+      });
+      router.replace('/');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  const handleMenuItemClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTimeout(() => setIsUserMenuOpen(false), 100);
+  };
 
   return (
     <header className={`fixed w-full top-0 z-50 transition-colors duration-300 ${
@@ -98,7 +120,7 @@ export default function Header() {
                             <Link
                               href="/admin/dashboard"
                               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              onClick={() => setIsUserMenuOpen(false)}
+                              onClick={handleMenuItemClick}
                             >
                               <LayoutDashboard className="h-4 w-4 mr-2" />
                               Dashboard
@@ -106,7 +128,7 @@ export default function Header() {
                             <Link
                               href="/admin/barcos"
                               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              onClick={() => setIsUserMenuOpen(false)}
+                              onClick={handleMenuItemClick}
                             >
                               <Ship className="h-4 w-4 mr-2" />
                               Gerenciar Barcos
@@ -114,7 +136,7 @@ export default function Header() {
                             <Link
                               href="/admin/reservas"
                               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              onClick={() => setIsUserMenuOpen(false)}
+                              onClick={handleMenuItemClick}
                             >
                               <Calendar className="h-4 w-4 mr-2" />
                               Gerenciar Reservas
@@ -122,7 +144,7 @@ export default function Header() {
                             <Link
                               href="/admin/usuarios"
                               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              onClick={() => setIsUserMenuOpen(false)}
+                              onClick={handleMenuItemClick}
                             >
                               <Users className="h-4 w-4 mr-2" />
                               Gerenciar Usuários
@@ -133,7 +155,7 @@ export default function Header() {
                             <Link
                               href="/minhas-reservas"
                               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              onClick={() => setIsUserMenuOpen(false)}
+                              onClick={handleMenuItemClick}
                             >
                               <Calendar className="h-4 w-4 mr-2" />
                               Minhas Reservas
@@ -141,7 +163,7 @@ export default function Header() {
                             <Link
                               href="/favoritos"
                               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              onClick={() => setIsUserMenuOpen(false)}
+                              onClick={handleMenuItemClick}
                             >
                               <Heart className="h-4 w-4 mr-2" />
                               Favoritos
@@ -149,10 +171,8 @@ export default function Header() {
                           </>
                         )}
                         <button
-                          onClick={() => {
-                            setIsUserMenuOpen(false);
-                            signOut();
-                          }}
+                          onClick={handleLogout}
+                          type="button"
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                         >
                           <LogOut className="h-4 w-4 mr-2" />
@@ -164,7 +184,7 @@ export default function Header() {
                         <Link
                           href="/login"
                           className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          onClick={() => setIsUserMenuOpen(false)}
+                          onClick={handleMenuItemClick}
                         >
                           <LogIn className="h-4 w-4 mr-2" />
                           Login
@@ -172,7 +192,7 @@ export default function Header() {
                         <Link
                           href="/registrar"
                           className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          onClick={() => setIsUserMenuOpen(false)}
+                          onClick={handleMenuItemClick}
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
                           Registrar
@@ -221,7 +241,7 @@ export default function Header() {
                           <Link
                             href="/admin/dashboard"
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            onClick={() => setIsUserMenuOpen(false)}
+                            onClick={handleMenuItemClick}
                           >
                             <LayoutDashboard className="h-4 w-4 mr-2" />
                             Dashboard
@@ -229,7 +249,7 @@ export default function Header() {
                           <Link
                             href="/admin/barcos"
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            onClick={() => setIsUserMenuOpen(false)}
+                            onClick={handleMenuItemClick}
                           >
                             <Ship className="h-4 w-4 mr-2" />
                             Gerenciar Barcos
@@ -237,7 +257,7 @@ export default function Header() {
                           <Link
                             href="/admin/reservas"
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            onClick={() => setIsUserMenuOpen(false)}
+                            onClick={handleMenuItemClick}
                           >
                             <Calendar className="h-4 w-4 mr-2" />
                             Gerenciar Reservas
@@ -245,7 +265,7 @@ export default function Header() {
                           <Link
                             href="/admin/usuarios"
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            onClick={() => setIsUserMenuOpen(false)}
+                            onClick={handleMenuItemClick}
                           >
                             <Users className="h-4 w-4 mr-2" />
                             Gerenciar Usuários
@@ -256,7 +276,7 @@ export default function Header() {
                           <Link
                             href="/minhas-reservas"
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            onClick={() => setIsUserMenuOpen(false)}
+                            onClick={handleMenuItemClick}
                           >
                             <Calendar className="h-4 w-4 mr-2" />
                             Minhas Reservas
@@ -264,7 +284,7 @@ export default function Header() {
                           <Link
                             href="/favoritos"
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            onClick={() => setIsUserMenuOpen(false)}
+                            onClick={handleMenuItemClick}
                           >
                             <Heart className="h-4 w-4 mr-2" />
                             Favoritos
@@ -272,10 +292,8 @@ export default function Header() {
                         </>
                       )}
                       <button
-                        onClick={() => {
-                          setIsUserMenuOpen(false);
-                          signOut();
-                        }}
+                        onClick={handleLogout}
+                        type="button"
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                       >
                         <LogOut className="h-4 w-4 mr-2" />
@@ -287,7 +305,7 @@ export default function Header() {
                       <Link
                         href="/login"
                         className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={handleMenuItemClick}
                       >
                         <LogIn className="h-4 w-4 mr-2" />
                         Login
@@ -295,7 +313,7 @@ export default function Header() {
                       <Link
                         href="/registrar"
                         className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={handleMenuItemClick}
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Registrar

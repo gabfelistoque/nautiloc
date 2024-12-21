@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import BoatCard from '@/components/BoatCard';
 import SearchForm from '@/components/SearchForm';
 import CompactWeatherWidget from '@/components/CompactWeatherWidget';

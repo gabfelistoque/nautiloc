@@ -46,7 +46,7 @@ export default function SearchForm() {
       params.append('guests', guests.toString());
     }
 
-    router.push(`/resultados?${params.toString()}`);
+    router.push(`/barcos?${params.toString()}`);
   };
 
   return (
