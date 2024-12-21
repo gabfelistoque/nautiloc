@@ -7,9 +7,9 @@ interface NavigationData {
   heading: number | null;
   speed: number | null;
   error: string | null;
+  permissionStatus: 'not-requested' | 'requesting' | 'granted' | 'denied';
 }
 
-// Estendendo a interface DeviceOrientationEvent para incluir propriedades webkit
 interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
   webkitCompassHeading?: number;
 }
@@ -18,39 +18,58 @@ const NavigationTools = () => {
   const [data, setData] = useState<NavigationData>({
     heading: null,
     speed: null,
-    error: null
+    error: null,
+    permissionStatus: 'not-requested'
   });
 
-  useEffect(() => {
-    // Verificar se o navegador suporta os sensores necessários
-    if (!window.DeviceOrientationEvent) {
-      setData(prev => ({ ...prev, error: 'Seu dispositivo não suporta orientação' }));
-      return;
-    }
-
-    // Solicitar permissão para usar os sensores (necessário em alguns navegadores)
-    const requestPermission = async () => {
+  const requestSensorPermissions = async () => {
+    setData(prev => ({ ...prev, permissionStatus: 'requesting' }));
+    
+    try {
+      // Solicitar permissão para geolocalização primeiro
+      const geoPermission = await navigator.permissions.query({ name: 'geolocation' });
+      
+      // Solicitar permissão para orientação do dispositivo (iOS)
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
         try {
-          const permission = await (DeviceOrientationEvent as any).requestPermission();
-          if (permission !== 'granted') {
-            setData(prev => ({ ...prev, error: 'Permissão negada para acessar os sensores' }));
+          const orientationPermission = await (DeviceOrientationEvent as any).requestPermission();
+          if (orientationPermission === 'granted') {
+            setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
+            initializeSensors();
+          } else {
+            setData(prev => ({
+              ...prev,
+              permissionStatus: 'denied',
+              error: 'Permissão para sensores negada. Por favor, permita o acesso aos sensores nas configurações do seu navegador.'
+            }));
           }
         } catch (err) {
-          setData(prev => ({ ...prev, error: 'Erro ao solicitar permissão' }));
+          console.error('Erro ao solicitar permissão de orientação:', err);
+          // Em alguns dispositivos Android, o requestPermission não existe, mas os sensores funcionam
+          setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
+          initializeSensors();
         }
+      } else {
+        // Em dispositivos que não precisam de permissão explícita
+        setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
+        initializeSensors();
       }
-    };
+    } catch (err) {
+      console.error('Erro ao solicitar permissões:', err);
+      setData(prev => ({
+        ...prev,
+        permissionStatus: 'denied',
+        error: 'Erro ao acessar os sensores. Verifique as permissões do seu navegador.'
+      }));
+    }
+  };
 
-    requestPermission();
-
+  const initializeSensors = () => {
     // Manipulador para orientação do dispositivo
     const handleOrientation = (event: DeviceOrientationEventWithWebkit) => {
       if (event.webkitCompassHeading !== undefined) {
-        // Para dispositivos iOS
         setData(prev => ({ ...prev, heading: event.webkitCompassHeading || null }));
       } else if (event.alpha !== null) {
-        // Para outros dispositivos
         setData(prev => ({ ...prev, heading: event.alpha ? 360 - event.alpha : null }));
       }
     };
@@ -58,33 +77,71 @@ const NavigationTools = () => {
     // Manipulador para velocidade via GPS
     const handlePosition = (position: GeolocationPosition) => {
       if (position.coords.speed !== null) {
-        // Converter m/s para km/h
         const speedKmh = (position.coords.speed * 3.6);
         setData(prev => ({ ...prev, speed: speedKmh }));
       }
     };
 
-    // Configurar observadores
+    const handlePositionError = (error: GeolocationPositionError) => {
+      let errorMessage = 'Erro ao obter localização';
+      if (error.code === error.PERMISSION_DENIED) {
+        errorMessage = 'Permissão de localização negada';
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        errorMessage = 'Localização indisponível';
+      } else if (error.code === error.TIMEOUT) {
+        errorMessage = 'Tempo esgotado ao obter localização';
+      }
+      setData(prev => ({ ...prev, error: errorMessage }));
+    };
+
     window.addEventListener('deviceorientation', handleOrientation as any, true);
     
-    const watchId = navigator.geolocation.watchPosition(
+    navigator.geolocation.watchPosition(
       handlePosition,
-      (error) => setData(prev => ({ ...prev, error: 'Erro ao obter localização' })),
+      handlePositionError,
       { enableHighAccuracy: true }
     );
 
-    // Limpar observadores
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation as any, true);
-      navigator.geolocation.clearWatch(watchId);
     };
+  };
+
+  useEffect(() => {
+    if (!window.DeviceOrientationEvent) {
+      setData(prev => ({
+        ...prev,
+        error: 'Seu dispositivo não suporta orientação',
+        permissionStatus: 'denied'
+      }));
+      return;
+    }
   }, []);
 
   return (
     <div className="flex flex-col items-center space-y-6 p-4 bg-white rounded-lg shadow-md">
-      {data.error ? (
-        <div className="text-red-500">{data.error}</div>
-      ) : (
+      {data.permissionStatus === 'not-requested' && (
+        <button
+          onClick={requestSensorPermissions}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Iniciar Navegação
+        </button>
+      )}
+
+      {data.permissionStatus === 'requesting' && (
+        <div className="text-blue-600">
+          Solicitando permissões...
+        </div>
+      )}
+
+      {data.error && (
+        <div className="text-red-500 text-center p-4 bg-red-50 rounded-md">
+          {data.error}
+        </div>
+      )}
+
+      {data.permissionStatus === 'granted' && !data.error && (
         <>
           {/* Bússola */}
           <div className="relative w-32 h-32">
