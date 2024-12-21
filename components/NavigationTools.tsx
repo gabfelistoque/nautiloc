@@ -79,7 +79,7 @@ const NavigationTools = () => {
   const totalDistance = useRef<number>(0);
   const speedHistory = useRef<number[]>([]);
   const startTime = useRef<number | null>(null);
-  const weatherUpdateInterval = useRef<number | null>(null);
+  const weatherUpdateInterval = useRef<NodeJS.Timeout | null>(null);
 
   const addDebugMessage = (message: string) => {
     console.log(message);
