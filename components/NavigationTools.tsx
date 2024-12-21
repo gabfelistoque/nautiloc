@@ -8,6 +8,7 @@ interface NavigationData {
   speed: number | null;
   error: string | null;
   permissionStatus: 'not-requested' | 'requesting' | 'granted' | 'denied';
+  debug: string;
 }
 
 interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
@@ -19,24 +20,33 @@ const NavigationTools = () => {
     heading: null,
     speed: null,
     error: null,
-    permissionStatus: 'not-requested'
+    permissionStatus: 'not-requested',
+    debug: ''
   });
+  const [showDebug, setShowDebug] = useState(false);
+
+  const addDebugMessage = (message: string) => {
+    console.log(message);
+    setData(prev => ({ ...prev, debug: `${new Date().toLocaleTimeString()}: ${message}\n${prev.debug}` }));
+  };
 
   const requestSensorPermissions = async () => {
     setData(prev => ({ ...prev, permissionStatus: 'requesting' }));
     
     try {
-      // Solicitar permissão para geolocalização primeiro
-      const geoPermission = await navigator.permissions.query({ name: 'geolocation' });
+      addDebugMessage('Solicitando permissões...');
       
       // Solicitar permissão para orientação do dispositivo (iOS)
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
         try {
+          addDebugMessage('Dispositivo iOS detectado, solicitando permissão...');
           const orientationPermission = await (DeviceOrientationEvent as any).requestPermission();
           if (orientationPermission === 'granted') {
+            addDebugMessage('Permissão de orientação concedida');
             setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
             initializeSensors();
           } else {
+            addDebugMessage('Permissão de orientação negada');
             setData(prev => ({
               ...prev,
               permissionStatus: 'denied',
@@ -44,18 +54,19 @@ const NavigationTools = () => {
             }));
           }
         } catch (err) {
-          console.error('Erro ao solicitar permissão de orientação:', err);
+          addDebugMessage('Erro ao solicitar permissão de orientação, tentando como Android');
           // Em alguns dispositivos Android, o requestPermission não existe, mas os sensores funcionam
           setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
           initializeSensors();
         }
       } else {
-        // Em dispositivos que não precisam de permissão explícita
+        addDebugMessage('Dispositivo não requer permissão explícita');
         setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
         initializeSensors();
       }
     } catch (err) {
-      console.error('Erro ao solicitar permissões:', err);
+      const errorMsg = 'Erro ao acessar os sensores: ' + (err instanceof Error ? err.message : String(err));
+      addDebugMessage(errorMsg);
       setData(prev => ({
         ...prev,
         permissionStatus: 'denied',
@@ -65,8 +76,17 @@ const NavigationTools = () => {
   };
 
   const initializeSensors = () => {
+    addDebugMessage('Inicializando sensores...');
+
     // Manipulador para orientação do dispositivo
     const handleOrientation = (event: DeviceOrientationEventWithWebkit) => {
+      addDebugMessage(`Evento de orientação recebido: 
+        webkitCompassHeading: ${event.webkitCompassHeading}
+        alpha: ${event.alpha}
+        beta: ${event.beta}
+        gamma: ${event.gamma}
+      `);
+
       if (event.webkitCompassHeading !== undefined) {
         setData(prev => ({ ...prev, heading: event.webkitCompassHeading || null }));
       } else if (event.alpha !== null) {
@@ -76,6 +96,11 @@ const NavigationTools = () => {
 
     // Manipulador para velocidade via GPS
     const handlePosition = (position: GeolocationPosition) => {
+      addDebugMessage(`Posição GPS recebida:
+        Velocidade: ${position.coords.speed}
+        Precisão: ${position.coords.accuracy}
+      `);
+
       if (position.coords.speed !== null) {
         const speedKmh = (position.coords.speed * 3.6);
         setData(prev => ({ ...prev, speed: speedKmh }));
@@ -91,12 +116,14 @@ const NavigationTools = () => {
       } else if (error.code === error.TIMEOUT) {
         errorMessage = 'Tempo esgotado ao obter localização';
       }
+      addDebugMessage('Erro GPS: ' + errorMessage);
       setData(prev => ({ ...prev, error: errorMessage }));
     };
 
+    addDebugMessage('Adicionando event listeners...');
     window.addEventListener('deviceorientation', handleOrientation as any, true);
     
-    navigator.geolocation.watchPosition(
+    const watchId = navigator.geolocation.watchPosition(
       handlePosition,
       handlePositionError,
       { enableHighAccuracy: true }
@@ -104,11 +131,13 @@ const NavigationTools = () => {
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation as any, true);
+      navigator.geolocation.clearWatch(watchId);
     };
   };
 
   useEffect(() => {
     if (!window.DeviceOrientationEvent) {
+      addDebugMessage('DeviceOrientationEvent não suportado');
       setData(prev => ({
         ...prev,
         error: 'Seu dispositivo não suporta orientação',
@@ -116,10 +145,19 @@ const NavigationTools = () => {
       }));
       return;
     }
+    addDebugMessage('Componente montado, DeviceOrientationEvent suportado');
   }, []);
 
   return (
     <div className="flex flex-col items-center space-y-6 p-4 bg-white rounded-lg shadow-md">
+      {/* Botão de Debug */}
+      <button
+        onClick={() => setShowDebug(!showDebug)}
+        className="absolute top-4 right-4 px-3 py-1 bg-gray-200 text-sm rounded"
+      >
+        {showDebug ? 'Ocultar Debug' : 'Mostrar Debug'}
+      </button>
+
       {data.permissionStatus === 'not-requested' && (
         <button
           onClick={requestSensorPermissions}
@@ -141,8 +179,14 @@ const NavigationTools = () => {
         </div>
       )}
 
-      {data.permissionStatus === 'granted' && !data.error && (
+      {data.permissionStatus === 'granted' && (
         <>
+          {/* Status dos Sensores */}
+          <div className="text-sm text-gray-600 mb-4">
+            <div>Bússola: {data.heading !== null ? 'Ativa' : 'Inativa'}</div>
+            <div>GPS: {data.speed !== null ? 'Ativo' : 'Inativo'}</div>
+          </div>
+
           {/* Bússola */}
           <div className="relative w-32 h-32">
             <motion.div
@@ -174,6 +218,13 @@ const NavigationTools = () => {
             </div>
             <div className="text-sm text-gray-500">Direção</div>
           </div>
+
+          {/* Debug Info */}
+          {showDebug && (
+            <div className="mt-4 p-2 bg-gray-100 rounded text-xs font-mono whitespace-pre-wrap max-h-40 overflow-y-auto w-full">
+              {data.debug || 'Aguardando dados dos sensores...'}
+            </div>
+          )}
         </>
       )}
     </div>
