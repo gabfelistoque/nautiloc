@@ -15,10 +15,19 @@ interface NavigationData {
   maxSpeed: number | null;
   distance: number | null;
   course: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  weather: {
+    windSpeed: number | null;
+    windDirection: number | null;
+    humidity: number | null;
+    temperature: number | null;
+  };
 }
 
-interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
-  webkitCompassHeading?: number;
+interface WeatherData {
+  wind: { speed: number; deg: number };
+  main: { humidity: number; temp: number };
 }
 
 interface Position {
@@ -26,6 +35,12 @@ interface Position {
   longitude: number;
   timestamp: number;
 }
+
+interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
+  webkitCompassHeading?: number;
+}
+
+const WEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || '';
 
 const NavigationTools = () => {
   const [data, setData] = useState<NavigationData>({
@@ -39,14 +54,24 @@ const NavigationTools = () => {
     avgSpeed: null,
     maxSpeed: null,
     distance: null,
-    course: null
+    course: null,
+    latitude: null,
+    longitude: null,
+    weather: {
+      windSpeed: null,
+      windDirection: null,
+      humidity: null,
+      temperature: null
+    }
   });
   const [showDebug, setShowDebug] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [useNautical, setUseNautical] = useState(false);
   const lastPosition = useRef<Position | null>(null);
   const speedHistory = useRef<number[]>([]);
   const startTime = useRef<number | null>(null);
   const totalDistance = useRef<number>(0);
+  const weatherUpdateInterval = useRef<NodeJS.Timeout | null>(null);
 
   const addDebugMessage = (message: string) => {
     console.log(message);
@@ -72,7 +97,22 @@ const NavigationTools = () => {
     }
   };
 
-  // Função para calcular a distância entre dois pontos em metros
+  const kmhToKnots = (kmh: number) => kmh / 1.852;
+  const kmToNauticalMiles = (km: number) => km / 1.852;
+  const msToKnots = (ms: number) => ms * 1.944;
+  const celsiusToFahrenheit = (c: number) => (c * 9/5) + 32;
+
+  const formatCoordinate = (coord: number | null, type: 'lat' | 'lon'): string => {
+    if (coord === null) return '--';
+    const direction = type === 'lat' 
+      ? (coord >= 0 ? 'N' : 'S')
+      : (coord >= 0 ? 'E' : 'W');
+    const abs = Math.abs(coord);
+    const degrees = Math.floor(abs);
+    const minutes = ((abs - degrees) * 60).toFixed(3);
+    return `${degrees}°${minutes}'${direction}`;
+  };
+
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371e3; // Raio da Terra em metros
     const φ1 = lat1 * Math.PI/180;
@@ -88,7 +128,6 @@ const NavigationTools = () => {
     return R * c;
   };
 
-  // Função para calcular a velocidade com base na mudança de posição
   const calculateSpeed = (currentPosition: Position): number | null => {
     if (!lastPosition.current) {
       lastPosition.current = currentPosition;
@@ -217,6 +256,20 @@ const NavigationTools = () => {
           timestamp: position.timestamp
         };
 
+        setData(prev => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        }));
+
+        // Atualiza dados meteorológicos a cada 5 minutos
+        if (!weatherUpdateInterval.current) {
+          updateWeather(position.coords.latitude, position.coords.longitude);
+          weatherUpdateInterval.current = setInterval(() => {
+            updateWeather(position.coords.latitude, position.coords.longitude);
+          }, 5 * 60 * 1000);
+        }
+
         // Atualiza o curso (direção do movimento)
         if (position.coords.heading !== null) {
           setData(prev => ({ ...prev, course: position.coords.heading }));
@@ -273,6 +326,9 @@ const NavigationTools = () => {
     return () => {
       if (watchId) {
         navigator.geolocation.clearWatch(watchId);
+      }
+      if (weatherUpdateInterval.current) {
+        clearInterval(weatherUpdateInterval.current);
       }
     };
   };
@@ -345,6 +401,44 @@ const NavigationTools = () => {
     };
   };
 
+  const updateWeather = async (latitude: number, longitude: number) => {
+    try {
+      if (!WEATHER_API_KEY) {
+        addDebugMessage('Chave da API do OpenWeather não configurada');
+        return;
+      }
+
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${WEATHER_API_KEY}&units=metric`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Erro ao buscar dados meteorológicos');
+      }
+
+      const weatherData: WeatherData = await response.json();
+      
+      setData(prev => ({
+        ...prev,
+        weather: {
+          windSpeed: weatherData.wind.speed,
+          windDirection: weatherData.wind.deg,
+          humidity: weatherData.main.humidity,
+          temperature: weatherData.main.temp
+        }
+      }));
+    } catch (error) {
+      addDebugMessage('Erro ao atualizar dados meteorológicos: ' + error);
+    }
+  };
+
+  const getStaticMapUrl = (latitude: number | null, longitude: number | null, zoom: number = 15): string => {
+    if (!latitude || !longitude) return '';
+    
+    // Usando OpenStreetMap estático (sem necessidade de API key)
+    return `https://staticmap.openstreetmap.de/staticmap.php?center=${latitude},${longitude}&zoom=${zoom}&size=300x200&markers=${latitude},${longitude}`;
+  };
+
   useEffect(() => {
     if (!window.DeviceOrientationEvent) {
       addDebugMessage('DeviceOrientationEvent não suportado');
@@ -399,60 +493,8 @@ const NavigationTools = () => {
 
       {data.permissionStatus === 'granted' && (
         <>
-          {/* Status dos Sensores */}
-          <div className="text-sm text-gray-600 mb-4">
-            <div>Bússola: {data.heading !== null ? 'Ativa' : 'Inativa'}</div>
-            <div>GPS: {data.gpsStatus === 'granted' ? 'Ativo' : 'Inativo'}</div>
-            {data.accuracy && (
-              <div>Precisão: ±{Math.round(data.accuracy)}m</div>
-            )}
-            {data.gpsStatus === 'denied' && (
-              <button
-                onClick={requestGPSPermission}
-                className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded"
-              >
-                Ativar GPS
-              </button>
-            )}
-          </div>
-
-          {/* Grid de informações */}
-          <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-4">
-            {/* Velocidade Atual */}
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold">
-                {data.speed !== null ? `${data.speed.toFixed(1)}` : '--'}
-              </div>
-              <div className="text-sm text-gray-500">km/h atual</div>
-            </div>
-
-            {/* Velocidade Média */}
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold">
-                {data.avgSpeed !== null ? `${data.avgSpeed.toFixed(1)}` : '--'}
-              </div>
-              <div className="text-sm text-gray-500">km/h média</div>
-            </div>
-
-            {/* Velocidade Máxima */}
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold">
-                {data.maxSpeed !== null ? `${data.maxSpeed.toFixed(1)}` : '--'}
-              </div>
-              <div className="text-sm text-gray-500">km/h máxima</div>
-            </div>
-
-            {/* Distância */}
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold">
-                {data.distance !== null ? `${data.distance.toFixed(2)}` : '--'}
-              </div>
-              <div className="text-sm text-gray-500">km percorridos</div>
-            </div>
-          </div>
-
           {/* Bússola */}
-          <div className="relative w-40 h-40">
+          <div className="relative w-40 h-40 mt-8">
             <motion.div
               className="absolute inset-0 flex items-center justify-center"
               style={{
@@ -468,19 +510,149 @@ const NavigationTools = () => {
             
             {/* Direção em graus */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-xl font-bold">
+              <div className="text-lg font-bold">
                 {data.heading !== null ? `${Math.round(data.heading)}°` : '--'}
               </div>
             </div>
           </div>
 
-          {/* Direção do movimento */}
-          {data.course !== null && (
-            <div className="text-center mt-2">
-              <div className="text-sm text-gray-500">Direção do movimento</div>
-              <div className="text-lg">{Math.round(data.course)}°</div>
+          {/* Mapa */}
+          {data.latitude && data.longitude && (
+            <div className="w-full max-w-sm overflow-hidden rounded-lg shadow-md">
+              <img
+                src={getStaticMapUrl(data.latitude, data.longitude)}
+                alt="Localização atual"
+                className="w-full h-[200px] object-cover"
+                onError={(e) => {
+                  // Se a imagem falhar, mostra uma mensagem
+                  e.currentTarget.style.display = 'none';
+                  addDebugMessage('Erro ao carregar o mapa');
+                }}
+              />
             </div>
           )}
+
+          {/* Coordenadas GPS */}
+          <div className="text-center p-3 bg-gray-50 rounded-lg w-full max-w-sm">
+            <div className="text-sm font-mono">
+              {formatCoordinate(data.latitude, 'lat')} <br />
+              {formatCoordinate(data.longitude, 'lon')}
+            </div>
+            <div className="text-sm text-gray-500">Coordenadas</div>
+          </div>
+
+          {/* Grid de informações */}
+          <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+            {/* Velocidade Atual */}
+            <div 
+              className="text-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+              onClick={() => setUseNautical(!useNautical)}
+            >
+              <div className="text-2xl font-bold">
+                {data.speed !== null 
+                  ? useNautical 
+                    ? `${kmhToKnots(data.speed).toFixed(1)}`
+                    : `${data.speed.toFixed(1)}`
+                  : '--'}
+              </div>
+              <div className="text-sm text-gray-500">
+                {useNautical ? 'nós' : 'km/h'} atual
+              </div>
+            </div>
+
+            {/* Velocidade Média */}
+            <div 
+              className="text-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+              onClick={() => setUseNautical(!useNautical)}
+            >
+              <div className="text-2xl font-bold">
+                {data.avgSpeed !== null 
+                  ? useNautical 
+                    ? `${kmhToKnots(data.avgSpeed).toFixed(1)}`
+                    : `${data.avgSpeed.toFixed(1)}`
+                  : '--'}
+              </div>
+              <div className="text-sm text-gray-500">
+                {useNautical ? 'nós' : 'km/h'} média
+              </div>
+            </div>
+
+            {/* Velocidade Máxima */}
+            <div 
+              className="text-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+              onClick={() => setUseNautical(!useNautical)}
+            >
+              <div className="text-2xl font-bold">
+                {data.maxSpeed !== null 
+                  ? useNautical 
+                    ? `${kmhToKnots(data.maxSpeed).toFixed(1)}`
+                    : `${data.maxSpeed.toFixed(1)}`
+                  : '--'}
+              </div>
+              <div className="text-sm text-gray-500">
+                {useNautical ? 'nós' : 'km/h'} máxima
+              </div>
+            </div>
+
+            {/* Distância */}
+            <div 
+              className="text-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+              onClick={() => setUseNautical(!useNautical)}
+            >
+              <div className="text-2xl font-bold">
+                {data.distance !== null 
+                  ? useNautical 
+                    ? `${kmToNauticalMiles(data.distance).toFixed(2)}`
+                    : `${data.distance.toFixed(2)}`
+                  : '--'}
+              </div>
+              <div className="text-sm text-gray-500">
+                {useNautical ? 'milhas náuticas' : 'km'}
+              </div>
+            </div>
+
+            {/* Dados Meteorológicos */}
+            {data.weather.windSpeed !== null && (
+              <>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <div className="text-xl font-bold">
+                    {useNautical 
+                      ? `${msToKnots(data.weather.windSpeed).toFixed(1)} nós`
+                      : `${(data.weather.windSpeed * 3.6).toFixed(1)} km/h`}
+                  </div>
+                  <div className="text-sm">
+                    {data.weather.windDirection !== null 
+                      ? `${Math.round(data.weather.windDirection)}°`
+                      : '--'}
+                  </div>
+                  <div className="text-sm text-gray-500">Vento</div>
+                </div>
+
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <div className="text-xl font-bold">
+                    {data.weather.humidity !== null 
+                      ? `${Math.round(data.weather.humidity)}%`
+                      : '--'}
+                  </div>
+                  <div className="text-sm">
+                    {data.weather.temperature !== null
+                      ? `${Math.round(data.weather.temperature)}°C`
+                      : '--'}
+                  </div>
+                  <div className="text-sm text-gray-500">Umidade/Temp</div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Status dos Sensores */}
+          <div className="text-sm text-gray-600 mt-4 text-center">
+            <div>Bússola: {data.heading !== null ? 'Ativa' : 'Inativa'}</div>
+            <div>GPS: {data.gpsStatus === 'granted' ? 'Ativo' : 'Inativo'}</div>
+            {data.accuracy && (
+              <div>Precisão: ±{Math.round(data.accuracy)}m</div>
+            )}
+          </div>
 
           {/* Debug Info */}
           {showDebug && (
@@ -492,6 +664,7 @@ const NavigationTools = () => {
       )}
     </div>
   );
+
 };
 
 export default NavigationTools;
