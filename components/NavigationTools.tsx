@@ -9,6 +9,7 @@ interface NavigationData {
   error: string | null;
   permissionStatus: 'not-requested' | 'requesting' | 'granted' | 'denied';
   debug: string;
+  gpsStatus: 'not-requested' | 'requesting' | 'granted' | 'denied';
 }
 
 interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
@@ -21,13 +22,105 @@ const NavigationTools = () => {
     speed: null,
     error: null,
     permissionStatus: 'not-requested',
-    debug: ''
+    debug: '',
+    gpsStatus: 'not-requested'
   });
   const [showDebug, setShowDebug] = useState(false);
 
   const addDebugMessage = (message: string) => {
     console.log(message);
     setData(prev => ({ ...prev, debug: `${new Date().toLocaleTimeString()}: ${message}\n${prev.debug}` }));
+  };
+
+  const requestGPSPermission = async () => {
+    addDebugMessage('Solicitando permissão do GPS...');
+    setData(prev => ({ ...prev, gpsStatus: 'requesting' }));
+
+    try {
+      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      
+      if (permission.state === 'granted') {
+        addDebugMessage('Permissão do GPS concedida');
+        setData(prev => ({ ...prev, gpsStatus: 'granted' }));
+        initializeGPS();
+      } else if (permission.state === 'prompt') {
+        // Solicitar permissão explicitamente
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            addDebugMessage('Permissão do GPS concedida após prompt');
+            setData(prev => ({ ...prev, gpsStatus: 'granted' }));
+            initializeGPS();
+          },
+          (error) => {
+            addDebugMessage(`Erro ao solicitar GPS: ${error.message}`);
+            setData(prev => ({ 
+              ...prev, 
+              gpsStatus: 'denied',
+              error: 'Permissão do GPS negada. Por favor, permita o acesso à localização.'
+            }));
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        addDebugMessage('Permissão do GPS negada');
+        setData(prev => ({ 
+          ...prev, 
+          gpsStatus: 'denied',
+          error: 'Permissão do GPS negada. Por favor, permita o acesso à localização nas configurações.'
+        }));
+      }
+    } catch (err) {
+      addDebugMessage(`Erro ao verificar permissão do GPS: ${err}`);
+      setData(prev => ({ 
+        ...prev, 
+        gpsStatus: 'denied',
+        error: 'Erro ao acessar o GPS. Verifique as permissões do seu navegador.'
+      }));
+    }
+  };
+
+  const initializeGPS = () => {
+    addDebugMessage('Inicializando GPS...');
+    
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        addDebugMessage(`
+          Posição GPS atualizada:
+          Velocidade: ${position.coords.speed !== null ? position.coords.speed + ' m/s' : 'não disponível'}
+          Precisão: ${position.coords.accuracy} metros
+          Latitude: ${position.coords.latitude}
+          Longitude: ${position.coords.longitude}
+        `);
+
+        if (position.coords.speed !== null) {
+          const speedKmh = position.coords.speed * 3.6;
+          setData(prev => ({ ...prev, speed: speedKmh }));
+        }
+      },
+      (error) => {
+        let errorMessage = 'Erro ao obter localização';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Permissão de localização negada';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = 'Localização indisponível';
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = 'Tempo esgotado ao obter localização';
+        }
+        addDebugMessage(`Erro GPS: ${errorMessage} (${error.message})`);
+        setData(prev => ({ ...prev, error: errorMessage }));
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+
+    return () => {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
   };
 
   const requestSensorPermissions = async () => {
@@ -45,6 +138,8 @@ const NavigationTools = () => {
             addDebugMessage('Permissão de orientação concedida');
             setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
             initializeSensors();
+            // Solicitar GPS após permissão da bússola
+            requestGPSPermission();
           } else {
             addDebugMessage('Permissão de orientação negada');
             setData(prev => ({
@@ -55,14 +150,17 @@ const NavigationTools = () => {
           }
         } catch (err) {
           addDebugMessage('Erro ao solicitar permissão de orientação, tentando como Android');
-          // Em alguns dispositivos Android, o requestPermission não existe, mas os sensores funcionam
           setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
           initializeSensors();
+          // Solicitar GPS após permissão da bússola
+          requestGPSPermission();
         }
       } else {
-        addDebugMessage('Dispositivo não requer permissão explícita');
+        addDebugMessage('Dispositivo não requer permissão explícita para orientação');
         setData(prev => ({ ...prev, permissionStatus: 'granted', error: null }));
         initializeSensors();
+        // Solicitar GPS após permissão da bússola
+        requestGPSPermission();
       }
     } catch (err) {
       const errorMsg = 'Erro ao acessar os sensores: ' + (err instanceof Error ? err.message : String(err));
@@ -76,17 +174,9 @@ const NavigationTools = () => {
   };
 
   const initializeSensors = () => {
-    addDebugMessage('Inicializando sensores...');
+    addDebugMessage('Inicializando sensores de orientação...');
 
-    // Manipulador para orientação do dispositivo
     const handleOrientation = (event: DeviceOrientationEventWithWebkit) => {
-      addDebugMessage(`Evento de orientação recebido: 
-        webkitCompassHeading: ${event.webkitCompassHeading}
-        alpha: ${event.alpha}
-        beta: ${event.beta}
-        gamma: ${event.gamma}
-      `);
-
       if (event.webkitCompassHeading !== undefined) {
         setData(prev => ({ ...prev, heading: event.webkitCompassHeading || null }));
       } else if (event.alpha !== null) {
@@ -94,44 +184,10 @@ const NavigationTools = () => {
       }
     };
 
-    // Manipulador para velocidade via GPS
-    const handlePosition = (position: GeolocationPosition) => {
-      addDebugMessage(`Posição GPS recebida:
-        Velocidade: ${position.coords.speed}
-        Precisão: ${position.coords.accuracy}
-      `);
-
-      if (position.coords.speed !== null) {
-        const speedKmh = (position.coords.speed * 3.6);
-        setData(prev => ({ ...prev, speed: speedKmh }));
-      }
-    };
-
-    const handlePositionError = (error: GeolocationPositionError) => {
-      let errorMessage = 'Erro ao obter localização';
-      if (error.code === error.PERMISSION_DENIED) {
-        errorMessage = 'Permissão de localização negada';
-      } else if (error.code === error.POSITION_UNAVAILABLE) {
-        errorMessage = 'Localização indisponível';
-      } else if (error.code === error.TIMEOUT) {
-        errorMessage = 'Tempo esgotado ao obter localização';
-      }
-      addDebugMessage('Erro GPS: ' + errorMessage);
-      setData(prev => ({ ...prev, error: errorMessage }));
-    };
-
-    addDebugMessage('Adicionando event listeners...');
     window.addEventListener('deviceorientation', handleOrientation as any, true);
     
-    const watchId = navigator.geolocation.watchPosition(
-      handlePosition,
-      handlePositionError,
-      { enableHighAccuracy: true }
-    );
-
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation as any, true);
-      navigator.geolocation.clearWatch(watchId);
     };
   };
 
@@ -184,7 +240,15 @@ const NavigationTools = () => {
           {/* Status dos Sensores */}
           <div className="text-sm text-gray-600 mb-4">
             <div>Bússola: {data.heading !== null ? 'Ativa' : 'Inativa'}</div>
-            <div>GPS: {data.speed !== null ? 'Ativo' : 'Inativo'}</div>
+            <div>GPS: {data.gpsStatus === 'granted' ? 'Ativo' : 'Inativo'}</div>
+            {data.gpsStatus === 'denied' && (
+              <button
+                onClick={requestGPSPermission}
+                className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded"
+              >
+                Ativar GPS
+              </button>
+            )}
           </div>
 
           {/* Bússola */}
