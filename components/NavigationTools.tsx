@@ -10,6 +10,11 @@ interface NavigationData {
   permissionStatus: 'not-requested' | 'requesting' | 'granted' | 'denied';
   debug: string;
   gpsStatus: 'not-requested' | 'requesting' | 'granted' | 'denied';
+  accuracy: number | null;
+  avgSpeed: number | null;
+  maxSpeed: number | null;
+  distance: number | null;
+  course: number | null;
 }
 
 interface DeviceOrientationEventWithWebkit extends DeviceOrientationEvent {
@@ -29,14 +34,42 @@ const NavigationTools = () => {
     error: null,
     permissionStatus: 'not-requested',
     debug: '',
-    gpsStatus: 'not-requested'
+    gpsStatus: 'not-requested',
+    accuracy: null,
+    avgSpeed: null,
+    maxSpeed: null,
+    distance: null,
+    course: null
   });
   const [showDebug, setShowDebug] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const lastPosition = useRef<Position | null>(null);
+  const speedHistory = useRef<number[]>([]);
+  const startTime = useRef<number | null>(null);
+  const totalDistance = useRef<number>(0);
 
   const addDebugMessage = (message: string) => {
     console.log(message);
     setData(prev => ({ ...prev, debug: `${new Date().toLocaleTimeString()}: ${message}\n${prev.debug}` }));
+  };
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+        // Prevenir que a tela apague no iOS
+        if (navigator.userAgent.match(/iPhone/i)) {
+          // @ts-ignore
+          navigator.wakeLock?.request('screen');
+        }
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      addDebugMessage('Erro ao alternar tela cheia: ' + err);
+    }
   };
 
   // Função para calcular a distância entre dois pontos em metros
@@ -85,6 +118,45 @@ const NavigationTools = () => {
     if (speedKMH > 200) return null;
 
     return speedKMH;
+  };
+
+  const updateStats = (speed: number | null, position: Position) => {
+    if (speed !== null) {
+      // Atualiza histórico de velocidade
+      speedHistory.current.push(speed);
+      if (speedHistory.current.length > 10) { // mantém apenas últimos 10 registros
+        speedHistory.current.shift();
+      }
+
+      // Calcula velocidade média
+      const avgSpeed = speedHistory.current.reduce((a, b) => a + b, 0) / speedHistory.current.length;
+
+      // Atualiza velocidade máxima
+      const maxSpeed = Math.max(...speedHistory.current);
+
+      // Inicializa tempo de início se necessário
+      if (!startTime.current) {
+        startTime.current = Date.now();
+      }
+
+      // Atualiza distância total
+      if (lastPosition.current) {
+        const segmentDistance = calculateDistance(
+          lastPosition.current.latitude,
+          lastPosition.current.longitude,
+          position.latitude,
+          position.longitude
+        );
+        totalDistance.current += segmentDistance;
+      }
+
+      setData(prev => ({
+        ...prev,
+        avgSpeed,
+        maxSpeed,
+        distance: totalDistance.current / 1000, // converte para km
+      }));
+    }
   };
 
   const requestGPSPermission = async () => {
@@ -145,26 +217,31 @@ const NavigationTools = () => {
           timestamp: position.timestamp
         };
 
+        // Atualiza o curso (direção do movimento)
+        if (position.coords.heading !== null) {
+          setData(prev => ({ ...prev, course: position.coords.heading }));
+        }
+
+        // Atualiza a precisão
+        setData(prev => ({ ...prev, accuracy: position.coords.accuracy }));
+
         // Tenta usar a velocidade do GPS primeiro
         if (position.coords.speed !== null) {
           const speedKmh = position.coords.speed * 3.6;
           setData(prev => ({ ...prev, speed: speedKmh }));
+          updateStats(speedKmh, currentPosition);
           addDebugMessage(`Velocidade do GPS: ${speedKmh.toFixed(1)} km/h`);
         } else {
           // Se não tiver velocidade do GPS, calcula baseado na mudança de posição
           const calculatedSpeed = calculateSpeed(currentPosition);
           if (calculatedSpeed !== null) {
             setData(prev => ({ ...prev, speed: calculatedSpeed }));
+            updateStats(calculatedSpeed, currentPosition);
             addDebugMessage(`Velocidade calculada: ${calculatedSpeed.toFixed(1)} km/h`);
           }
         }
 
-        addDebugMessage(`
-          Posição GPS atualizada:
-          Latitude: ${position.coords.latitude}
-          Longitude: ${position.coords.longitude}
-          Precisão: ${position.coords.accuracy} metros
-        `);
+        lastPosition.current = currentPosition;
       },
       (error) => {
         let errorMessage = 'Erro ao obter localização';
@@ -184,6 +261,14 @@ const NavigationTools = () => {
         maximumAge: 0
       }
     );
+
+    // Tenta manter a tela ligada
+    try {
+      // @ts-ignore
+      navigator.wakeLock?.request('screen');
+    } catch (err) {
+      addDebugMessage('Erro ao tentar manter tela ligada: ' + err);
+    }
 
     return () => {
       if (watchId) {
@@ -275,13 +360,21 @@ const NavigationTools = () => {
 
   return (
     <div className="flex flex-col items-center space-y-6 p-4 bg-white rounded-lg shadow-md">
-      {/* Botão de Debug */}
-      <button
-        onClick={() => setShowDebug(!showDebug)}
-        className="absolute top-4 right-4 px-3 py-1 bg-gray-200 text-sm rounded"
-      >
-        {showDebug ? 'Ocultar Debug' : 'Mostrar Debug'}
-      </button>
+      {/* Botões de controle */}
+      <div className="absolute top-4 right-4 flex gap-2">
+        <button
+          onClick={toggleFullscreen}
+          className="px-3 py-1 bg-gray-200 text-sm rounded"
+        >
+          {isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
+        </button>
+        <button
+          onClick={() => setShowDebug(!showDebug)}
+          className="px-3 py-1 bg-gray-200 text-sm rounded"
+        >
+          {showDebug ? 'Ocultar Debug' : 'Mostrar Debug'}
+        </button>
+      </div>
 
       {data.permissionStatus === 'not-requested' && (
         <button
@@ -310,6 +403,9 @@ const NavigationTools = () => {
           <div className="text-sm text-gray-600 mb-4">
             <div>Bússola: {data.heading !== null ? 'Ativa' : 'Inativa'}</div>
             <div>GPS: {data.gpsStatus === 'granted' ? 'Ativo' : 'Inativo'}</div>
+            {data.accuracy && (
+              <div>Precisão: ±{Math.round(data.accuracy)}m</div>
+            )}
             {data.gpsStatus === 'denied' && (
               <button
                 onClick={requestGPSPermission}
@@ -320,8 +416,43 @@ const NavigationTools = () => {
             )}
           </div>
 
+          {/* Grid de informações */}
+          <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-4">
+            {/* Velocidade Atual */}
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold">
+                {data.speed !== null ? `${data.speed.toFixed(1)}` : '--'}
+              </div>
+              <div className="text-sm text-gray-500">km/h atual</div>
+            </div>
+
+            {/* Velocidade Média */}
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold">
+                {data.avgSpeed !== null ? `${data.avgSpeed.toFixed(1)}` : '--'}
+              </div>
+              <div className="text-sm text-gray-500">km/h média</div>
+            </div>
+
+            {/* Velocidade Máxima */}
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold">
+                {data.maxSpeed !== null ? `${data.maxSpeed.toFixed(1)}` : '--'}
+              </div>
+              <div className="text-sm text-gray-500">km/h máxima</div>
+            </div>
+
+            {/* Distância */}
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold">
+                {data.distance !== null ? `${data.distance.toFixed(2)}` : '--'}
+              </div>
+              <div className="text-sm text-gray-500">km percorridos</div>
+            </div>
+          </div>
+
           {/* Bússola */}
-          <div className="relative w-32 h-32">
+          <div className="relative w-40 h-40">
             <motion.div
               className="absolute inset-0 flex items-center justify-center"
               style={{
@@ -332,25 +463,24 @@ const NavigationTools = () => {
               animate={{ rotate: data.heading || 0 }}
               transition={{ type: "spring", stiffness: 100 }}
             >
-              <div className="absolute top-0 w-1 h-4 bg-red-500" />
+              <div className="absolute top-0 w-1 h-5 bg-red-500" />
             </motion.div>
+            
+            {/* Direção em graus */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-xl font-bold">
+                {data.heading !== null ? `${Math.round(data.heading)}°` : '--'}
+              </div>
+            </div>
           </div>
 
-          {/* Velocímetro */}
-          <div className="text-center">
-            <div className="text-2xl font-bold">
-              {data.speed !== null ? `${data.speed.toFixed(1)} km/h` : '--'}
+          {/* Direção do movimento */}
+          {data.course !== null && (
+            <div className="text-center mt-2">
+              <div className="text-sm text-gray-500">Direção do movimento</div>
+              <div className="text-lg">{Math.round(data.course)}°</div>
             </div>
-            <div className="text-sm text-gray-500">Velocidade</div>
-          </div>
-
-          {/* Direção em graus */}
-          <div className="text-center">
-            <div className="text-xl">
-              {data.heading !== null ? `${Math.round(data.heading)}°` : '--'}
-            </div>
-            <div className="text-sm text-gray-500">Direção</div>
-          </div>
+          )}
 
           {/* Debug Info */}
           {showDebug && (
