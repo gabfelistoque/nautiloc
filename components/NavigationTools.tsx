@@ -212,8 +212,8 @@ const NavigationTools = () => {
         }
 
         addDebugMessage(`
-          Velocidade: ${processedSpeed.toFixed(1)} km/h
-          Precisão: ${position.coords.accuracy.toFixed(1)}m
+          Velocidade: ${processedSpeed ? processedSpeed.toFixed(1) : 'N/A'} km/h
+          Precisão: ${position.coords.accuracy ? position.coords.accuracy.toFixed(1) : 'N/A'}m
           GPS Speed: ${position.coords.speed !== null ? (position.coords.speed * 3.6).toFixed(1) : 'N/A'} km/h
         `);
       },

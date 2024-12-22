@@ -21,7 +21,7 @@ const LOCATIONS: Location[] = [
 interface WeatherData {
   temperature: number;
   windSpeed: number;
-  waveHeight: number;
+  waveHeight: number | null;
   weatherCondition: string;
   windDirection: number;
   humidity: number;
@@ -99,13 +99,15 @@ export default function CompactWeatherWidget() {
     }
   };
 
-  const getConditionColor = (waveHeight: number) => {
+  const getConditionColor = (waveHeight: number | null) => {
+    if (waveHeight === null) return 'bg-gray-500';
     if (waveHeight < 1) return 'bg-emerald-500';
     if (waveHeight < 2) return 'bg-amber-500';
     return 'bg-rose-500';
   };
 
-  const getConditionText = (waveHeight: number) => {
+  const getConditionText = (waveHeight: number | null) => {
+    if (waveHeight === null) return 'Indisponível';
     if (waveHeight < 1) return 'Ideal';
     if (waveHeight < 2) return 'Moderado';
     return 'Alto';
@@ -159,7 +161,7 @@ export default function CompactWeatherWidget() {
               <Waves className="w-3.5 h-3.5 text-blue-500" />
               <span className="text-xs text-gray-700">Ondas</span>
             </div>
-            <p className="text-lg md:text-sm font-medium text-gray-900">{weather.waveHeight.toFixed(1)}m</p>
+            <p className="text-lg md:text-sm font-medium text-gray-900">{weather.waveHeight !== null ? weather.waveHeight.toFixed(1) : '--'}m</p>
           </div>
 
           {/* Vento */}

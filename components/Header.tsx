@@ -61,13 +61,14 @@ export default function Header() {
     e.stopPropagation();
     try {
       setIsUserMenuOpen(false);
-      const data = await signOut({ 
-        redirect: false,
-        callbackUrl: '/' 
+      await signOut({ 
+        redirect: true,
+        callbackUrl: '/'
       });
-      router.replace('/');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      // Fallback redirect in case of error
+      router.replace('/');
     }
   };
 

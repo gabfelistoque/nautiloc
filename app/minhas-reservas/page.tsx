@@ -39,7 +39,13 @@ export default function MinhasReservasPage() {
 
     const fetchBookings = async () => {
       try {
-        const response = await fetch('/api/bookings');
+        const response = await fetch('/api/bookings', {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        
         if (!response.ok) {
           throw new Error('Failed to fetch bookings');
         }

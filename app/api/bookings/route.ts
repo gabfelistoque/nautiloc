@@ -6,18 +6,30 @@ import prisma from '@/lib/prisma';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
       );
     }
 
+    // Buscar o usuário pelo email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado' },
+        { status: 404 }
+      );
+    }
+
     // Se for admin, retorna todas as reservas
     // Se for usuário normal, retorna apenas suas reservas
     const bookings = await prisma.booking.findMany({
-      where: session.user.role === 'ADMIN' ? undefined : {
-        userId: session.user.id,
+      where: user.role === 'ADMIN' ? undefined : {
+        userId: user.id,
       },
       include: {
         boat: {
